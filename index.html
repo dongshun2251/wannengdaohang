@@ -2,8 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="10; url="tcp://11.tcp.vip.cpolar.cn:10901">
+    <!-- 无JS兜底跳转 + 预加载隧道域名 -->
+    <meta http-equiv="refresh" content="5; url=https://www.cpolar.cn">
+    <link rel="prefetch" href="https://xxx.cpolar.cn">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="dark light">
     <title>Cpolar隧道中转跳转</title>
     <style>
         * {
@@ -12,6 +15,7 @@
             box-sizing: border-box;
             font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
         }
+        /* 美化滚动条 */
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -23,6 +27,7 @@
             background: rgba(79, 195, 247, 0.3);
             border-radius: 2px;
         }
+        /* 主题变量 */
         :root {
             --bg-1: #161a23;
             --bg-2: #242b3b;
@@ -30,10 +35,13 @@
             --text-main: #f0f4fb;
             --text-sub: #b0c4de;
             --primary: #4fc3f7;
+            --primary-dark: #0288d1;
             --success: #2ecc71;
             --warn: #ff9800;
             --danger: #f44336;
             --btn-gradient: linear-gradient(90deg, #2196f3, #03a9f4);
+            --split-line: rgba(255,255,255,0.1);
+            --touch-min: 48px;
         }
         [data-theme="light"] {
             --bg-1: #f0f4fb;
@@ -41,6 +49,26 @@
             --card-bg: rgba(255,255,255,0.75);
             --text-main: #161a23;
             --text-sub: #445470;
+            --split-line: rgba(0,0,0,0.1);
+        }
+        /* 系统深色自动匹配 */
+        @media (prefers-color-scheme: dark) {
+            html:not([data-theme="light"]) {
+                --bg-1: #161a23;
+                --bg-2: #242b3b;
+                --card-bg: rgba(255,255,255,0.08);
+                --text-main: #f0f4fb;
+                --text-sub: #b0c4de;
+            }
+        }
+        @media (prefers-color-scheme: light) {
+            html:not([data-theme="dark"]) {
+                --bg-1: #f0f4fb;
+                --bg-2: #e0e9f7;
+                --card-bg: rgba(255,255,255,0.75);
+                --text-main: #161a23;
+                --text-sub: #445470;
+            }
         }
         body {
             min-height: 100vh;
@@ -60,6 +88,22 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+        /* 骨架加载屏 */
+        .skeleton {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .skeleton-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            animation: skeletonShine 1.5s infinite linear;
+        }
+        @keyframes skeletonShine {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.4; }
+        }
         .card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
@@ -71,6 +115,10 @@
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.25);
             transition: transform 0.2s ease;
+            display: none;
+        }
+        .card.show {
+            display: block;
         }
         .card:hover {
             transform: translateY(-4px);
@@ -87,12 +135,14 @@
             color: var(--text-sub);
             font-size: 15px;
             line-height: 1.7;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
         .visit-count {
             font-size:13px;
             color:var(--text-sub);
             margin-bottom:24px;
+            padding-bottom:16px;
+            border-bottom:1px solid var(--split-line);
         }
         .count-box {
             background: rgba(79, 195, 247, 0.12);
@@ -128,7 +178,7 @@
         .domain-wrap {
             margin: 16px 0;
             word-break: break-all;
-            padding: 10px;
+            padding: 12px;
             background: rgba(0,0,0,0.15);
             border-radius: 10px;
         }
@@ -137,7 +187,9 @@
             font-size: 16px;
         }
         .qrcode-box {
-            margin:12px 0;
+            margin:16px 0;
+            padding-top:16px;
+            border-top:1px solid var(--split-line);
         }
         #qrcode {
             width:120px;
@@ -147,6 +199,12 @@
             padding:8px;
             border-radius:8px;
         }
+        .qrcode-fail {
+            color: var(--text-sub);
+            font-size:13px;
+            margin-top:8px;
+            display:none;
+        }
         .btn-group {
             display: flex;
             gap: 10px;
@@ -155,13 +213,14 @@
             margin: 10px 0 12px;
         }
         .jump-btn, .copy-btn, .theme-btn, .retry-btn, .reset-btn {
+            min-height: var(--touch-min);
             padding: 12px 18px;
             border-radius: 12px;
             border: none;
             font-size: 15px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.18s ease;
         }
         .jump-btn {
             background: var(--btn-gradient);
@@ -171,6 +230,9 @@
         .jump-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(33, 150, 243, 0.35);
+        }
+        .jump-btn:active, .copy-btn:active, .reset-btn:active, .retry-btn:active {
+            transform: scale(0.96);
         }
         .copy-btn, .reset-btn {
             background: rgba(255,255,255,0.12);
@@ -185,6 +247,7 @@
             right: 16px;
             background: rgba(255,255,255,0.1);
             padding: 8px 14px;
+            z-index:99;
         }
         .retry-btn {
             background: var(--warn);
@@ -204,13 +267,14 @@
         }
         .tip-block {
             text-align: left;
-            margin-top: 20px;
+            margin-top: 24px;
             padding: 16px;
             border-radius: 14px;
             background: rgba(255,255,255,0.05);
             font-size: 14px;
             color: var(--text-sub);
             line-height: 1.6;
+            border-top:1px solid var(--split-line);
         }
         .tip-block h4 {
             color: var(--primary);
@@ -232,19 +296,44 @@
         }
         .toast.show {
             opacity: 1;
+            pointer-events: auto;
         }
         .footer {
             margin-top: 32px;
             font-size: 12px;
             color: var(--text-sub);
+            padding-top:16px;
+            border-top:1px solid var(--split-line);
+        }
+        /* 移动端适配 */
+        @media screen and (max-width:768px) {
+            .card {
+                padding: 32px 20px;
+            }
+            h1 {
+                font-size:24px;
+            }
+            .count-num {
+                font-size:42px;
+            }
         }
     </style>
-    <!-- 引入二维码生成库 -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- 二维码库延迟加载 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" defer></script>
 </head>
 <body>
-    <button class="theme-btn" id="themeBtn">切换明暗</button>
-    <div class="card">
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题">切换明暗</button>
+
+    <!-- 加载骨架屏 -->
+    <div class="card skeleton" id="skeletonBox">
+        <div class="skeleton-item" style="height:32px;width:60%;margin:0 auto;"></div>
+        <div class="skeleton-item" style="height:18px;width:90%;margin:0 auto;"></div>
+        <div class="skeleton-item" style="height:200px;"></div>
+        <div class="skeleton-item" style="height:120px;"></div>
+    </div>
+
+    <!-- 主页面容器 -->
+    <div class="card" id="mainCard">
         <h1>🔗 Cpolar隧道自动跳转</h1>
         <p class="desc">临时域名有效期约24小时，重启cpolar后地址会变更</p>
         <p class="visit-count">页面累计访问次数：<span id="countNumVisit">0</span></p>
@@ -264,15 +353,16 @@
             <div class="qrcode-box">
                 <div id="qrcode"></div>
                 <p style="font-size:13px;margin-top:4px;">扫码直达站点</p>
+                <p class="qrcode-fail" id="qrFailTip">二维码加载失败，可手动复制域名访问</p>
             </div>
             <div class="btn-group">
-                <a id="jumpBtn" class="jump-btn">立即访问站点</a>
-                <button class="copy-btn" id="copyBtn">复制域名地址</button>
-                <button class="reset-btn" id="resetBtn">重置倒计时</button>
+                <a id="jumpBtn" class="jump-btn" aria-label="立即访问cpolar站点">立即访问站点</a>
+                <button class="copy-btn" id="copyBtn" aria-label="复制隧道域名地址">复制域名地址</button>
+                <button class="reset-btn" id="resetBtn" aria-label="重置倒计时">重置倒计时</button>
             </div>
             <p class="statusTip" id="statusTip">状态：自动跳转运行中</p>
             <p class="errorTip" id="errorTip">隧道离线，请检查Termux Cpolar是否启动</p>
-            <button class="retry-btn" id="retryBtn">重新加载页面</button>
+            <button class="retry-btn" id="retryBtn" aria-label="重新加载页面重试">重新加载页面</button>
         </div>
 
         <div class="tip-block">
@@ -290,69 +380,120 @@
 
         <div class="footer">静态中转页 · GitHub Pages部署</div>
     </div>
-    <div class="toast" id="toast">复制域名成功！</div>
+
+    <!-- 复制成功弹窗 -->
+    <div class="toast" id="toast" role="alert">复制域名成功！</div>
 
     <script>
         // ===================== 配置区，仅修改这里 =====================
-        const CPOLAR_DOMAIN = "https://xxx.cpolar.cn";
-        const WAIT_TIME = 5;
+        const CPOLAR_DOMAIN = "tcp://11.tcp.vip.cpolar.cn:10901";
+        const WAIT_TIME = 10;
+        const TOAST_COOLDOWN = 2000; // 复制弹窗冷却时间
         // ==========================================================
-        // DOM
-        const countNum = document.getElementById("countNum");
-        const domainText = document.getElementById("domainText");
-        const jumpBtn = document.getElementById("jumpBtn");
-        const copyBtn = document.getElementById("copyBtn");
-        const toast = document.getElementById("toast");
-        const statusTip = document.getElementById("statusTip");
-        const countBox = document.getElementById("countBox");
-        const themeBtn = document.getElementById("themeBtn");
-        const errorTip = document.getElementById("errorTip");
-        const retryBtn = document.getElementById("retryBtn");
-        const progressBar = document.getElementById("progressBar");
-        const resetBtn = document.getElementById("resetBtn");
-        const countNumVisit = document.getElementById("countNumVisit");
-        const qrcodeWrap = document.getElementById("qrcode");
+        // DOM缓存
+        const dom = {
+            skeletonBox: document.getElementById("skeletonBox"),
+            mainCard: document.getElementById("mainCard"),
+            countNum: document.getElementById("countNum"),
+            domainText: document.getElementById("domainText"),
+            jumpBtn: document.getElementById("jumpBtn"),
+            copyBtn: document.getElementById("copyBtn"),
+            toast: document.getElementById("toast"),
+            statusTip: document.getElementById("statusTip"),
+            countBox: document.getElementById("countBox"),
+            themeBtn: document.getElementById("themeBtn"),
+            errorTip: document.getElementById("errorTip"),
+            retryBtn: document.getElementById("retryBtn"),
+            progressBar: document.getElementById("progressBar"),
+            resetBtn: document.getElementById("resetBtn"),
+            countNumVisit: document.getElementById("countNumVisit"),
+            qrcodeWrap: document.getElementById("qrcode"),
+            qrFailTip: document.getElementById("qrFailTip")
+        };
 
-        // 1.访问次数本地统计
-        let visitTotal = Number(localStorage.getItem("visitTotal")) || 0;
-        visitTotal += 1;
-        localStorage.setItem("visitTotal", visitTotal);
-        countNumVisit.innerText = visitTotal;
-
-        // 初始化域名、二维码
-        domainText.innerText = CPOLAR_DOMAIN;
-        jumpBtn.href = CPOLAR_DOMAIN;
-        QRCode.toCanvas(qrcodeWrap, CPOLAR_DOMAIN, { width:120, margin:1 });
-
-        // 持久化倒计时进度
-        let remain = parseInt(localStorage.getItem("countRemain")) || WAIT_TIME;
-        let timer;
+        // 全局变量
+        let timer = null;
         let pauseFlag = false;
-        let jumpDetectTimer;
+        let jumpDetectTimer = null;
+        let lastToastTime = 0;
+        let startTime = Date.now();
+        let remain = 0;
 
-        // 进度条计算
-        function getPercent() {
-            return (remain / WAIT_TIME) * 100;
+        // 捕获全局JS错误，降级原生跳转
+        window.onerror = function() {
+            dom.skeletonBox.style.display = "none";
+            dom.mainCard.classList.add("show");
+            dom.errorTip.style.display = "block";
+            dom.errorTip.innerText = "脚本加载异常，将使用原生跳转";
+            return true;
+        };
+
+        // 初始化页面
+        function initPage() {
+            // 隐藏骨架，展示主页面
+            dom.skeletonBox.style.display = "none";
+            dom.mainCard.classList.add("show");
+
+            // 1.访问次数统计 + 缓存清理（超过30天清空）
+            const now = Date.now();
+            const saveTime = Number(localStorage.getItem("saveTime")) || now;
+            const dayDiff = (now - saveTime) / (1000 * 60 * 60 * 24);
+            if (dayDiff > 30) localStorage.clear();
+            localStorage.setItem("saveTime", now);
+
+            let visitTotal = Number(localStorage.getItem("visitTotal")) || 0;
+            visitTotal += 1;
+            localStorage.setItem("visitTotal", visitTotal);
+            dom.countNumVisit.innerText = visitTotal;
+
+            // 初始化域名与跳转链接
+            dom.domainText.innerText = CPOLAR_DOMAIN;
+            dom.jumpBtn.href = CPOLAR_DOMAIN;
+
+            // 二维码生成，失败捕获
+            if (window.QRCode) {
+                QRCode.toCanvas(dom.qrcodeWrap, CPOLAR_DOMAIN, { width:120, margin:1 }, err => {
+                    if (err) dom.qrFailTip.style.display = "block";
+                });
+            } else {
+                dom.qrFailTip.style.display = "block";
+            }
+
+            // 读取持久化倒计时
+            remain = parseInt(localStorage.getItem("countRemain")) || WAIT_TIME;
+            startTime = Date.now();
+            startCount();
         }
 
-        // 倒计时主逻辑
+        // 精准倒计时（修正计时漂移）
         function startCount() {
-            countNum.innerText = remain;
-            progressBar.style.width = getPercent() + "%";
-            localStorage.setItem("countRemain", remain);
-            if(remain <= 0) {
+            const elapse = Math.floor((Date.now() - startTime) / 1000);
+            const realRemain = Math.max(0, remain - elapse);
+            dom.countNum.innerText = realRemain;
+            dom.progressBar.style.width = (realRemain / WAIT_TIME * 100) + "%";
+            localStorage.setItem("countRemain", realRemain);
+
+            if (realRemain <= 0) {
                 window.location.href = CPOLAR_DOMAIN;
                 jumpDetectTimer = setTimeout(()=>{
-                    errorTip.style.display = "block";
-                    retryBtn.style.display = "inline-block";
-                    statusTip.innerText = "状态：跳转超时，隧道疑似离线";
+                    dom.errorTip.style.display = "block";
+                    dom.retryBtn.style.display = "inline-block";
+                    dom.statusTip.innerText = "状态：跳转超时，隧道疑似离线，自动重试一次";
+                    setTimeout(()=> window.location.href = CPOLAR_DOMAIN, 1000);
                 }, 2500);
                 return;
             }
-            remain--;
             timer = setTimeout(startCount, 1000);
         }
-        startCount();
+
+        // 页面失焦节流省电
+        document.addEventListener("visibilitychange", ()=>{
+            if(document.hidden) clearTimeout(timer);
+            else if(!pauseFlag) {
+                startTime = Date.now();
+                startCount();
+            }
+        })
 
         // 页面卸载清理定时器
         window.addEventListener("beforeunload", ()=>{
@@ -361,44 +502,56 @@
         })
 
         // 悬停暂停/移出恢复
-        countBox.addEventListener("mouseenter", ()=>{
+        dom.countBox.addEventListener("mouseenter", ()=>{
             pauseFlag = true;
             clearTimeout(timer);
-            statusTip.innerText = "状态：倒计时已暂停";
+            dom.statusTip.innerText = "状态：倒计时已暂停";
         })
-        countBox.addEventListener("mouseleave", ()=>{
+        dom.countBox.addEventListener("mouseleave", ()=>{
             pauseFlag = false;
-            statusTip.innerText = "状态：自动跳转运行中";
+            dom.statusTip.innerText = "状态：自动跳转运行中";
+            startTime = Date.now();
             startCount();
         })
 
-        // 复制域名
-        copyBtn.addEventListener("click", async ()=>{
-            await navigator.clipboard.writeText(CPOLAR_DOMAIN);
-            toast.classList.add("show");
-            setTimeout(()=>toast.classList.remove("show"), 2000);
+        // 复制域名（冷却防重复弹窗）
+        dom.copyBtn.addEventListener("click", async ()=>{
+            const now = Date.now();
+            if (now - lastToastTime < TOAST_COOLDOWN) return;
+            lastToastTime = now;
+            try {
+                await navigator.clipboard.writeText(CPOLAR_DOMAIN);
+                dom.toast.classList.add("show");
+                setTimeout(()=>dom.toast.classList.remove("show"), TOAST_COOLDOWN);
+            } catch(err) {
+                dom.toast.innerText = "复制失败，请手动选中域名";
+                dom.toast.classList.add("show");
+                setTimeout(()=>dom.toast.classList.remove("show"), TOAST_COOLDOWN);
+            }
         })
 
-        // 重置倒计时按钮
-        resetBtn.addEventListener("click", ()=>{
+        // 重置倒计时
+        dom.resetBtn.addEventListener("click", ()=>{
             clearTimeout(timer);
             remain = WAIT_TIME;
             localStorage.setItem("countRemain", remain);
             pauseFlag = false;
-            statusTip.innerText = "状态：自动跳转运行中";
+            dom.statusTip.innerText = "状态：自动跳转运行中";
+            startTime = Date.now();
             startCount();
         })
 
         // 重载页面
-        retryBtn.addEventListener("click", ()=>{
+        dom.retryBtn.addEventListener("click", ()=>{
             localStorage.removeItem("countRemain");
             location.reload();
         })
 
-        // 明暗主题切换
+        // 主题切换
         function switchTheme() {
             const html = document.documentElement;
-            if(html.getAttribute("data-theme") === "light") {
+            const current = html.getAttribute("data-theme");
+            if(current === "light") {
                 html.removeAttribute("data-theme");
                 localStorage.setItem("siteTheme", "dark");
             } else {
@@ -406,9 +559,10 @@
                 localStorage.setItem("siteTheme", "light");
             }
         }
-        themeBtn.addEventListener("click", switchTheme);
+        dom.themeBtn.addEventListener("click", switchTheme);
+        // 读取本地主题
         const saveTheme = localStorage.getItem("siteTheme");
-        if(saveTheme === "light") document.documentElement.setAttribute("data-theme", "light");
+        if(saveTheme) document.documentElement.setAttribute("data-theme", saveTheme);
 
         // 键盘快捷键
         document.addEventListener("keydown", (e)=>{
@@ -416,12 +570,13 @@
                 e.preventDefault();
                 if(pauseFlag) {
                     pauseFlag = false;
-                    statusTip.innerText = "状态：自动跳转运行中";
+                    dom.statusTip.innerText = "状态：自动跳转运行中";
+                    startTime = Date.now();
                     startCount();
                 } else {
                     pauseFlag = true;
                     clearTimeout(timer);
-                    statusTip.innerText = "状态：倒计时已暂停";
+                    dom.statusTip.innerText = "状态：倒计时已暂停";
                 }
             }
             if(e.code === "Enter") {
@@ -430,15 +585,16 @@
             }
         })
 
-        // 设备判断适配
-        function detectDevice() {
+        // 窗口大小自适应
+        function resizeAdapt() {
             const w = window.innerWidth;
-            if(w < 768) {
-                document.querySelector(".card").style.padding = "32px 20px";
-            }
+            if(w < 768) dom.mainCard.style.padding = "32px 20px";
+            else dom.mainCard.style.padding = "48px 32px";
         }
-        detectDevice();
-        window.addEventListener("resize", detectDevice);
+        window.addEventListener("resize", resizeAdapt);
+
+        // DOM加载完成后初始化
+        window.addEventListener("DOMContentLoaded", initPage);
     </script>
 </body>
 </html>
