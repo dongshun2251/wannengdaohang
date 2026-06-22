@@ -85,7 +85,7 @@
         let targetUrl = '';
         let countDownTimer = null;
 
-        // 拉取域名核心函数
+        // 拉取域名核心函数（已加入cpolar公网域名校验，拦截127.0.0.1内网地址）
         async function fetchDomain() {
             // 重置UI状态
             loadingIcon.classList.remove('hidden');
@@ -100,16 +100,19 @@
             if (countDownTimer) clearInterval(countDownTimer);
 
             try {
-                // 请求同仓库 domain.json
-                const res = await fetch('./domain.json?t=' + Date.now()); // 加时间戳防缓存
+                // 加时间戳防止浏览器缓存旧domain.json
+                const res = await fetch('./domain.json?t=' + Date.now());
                 if (!res.ok) throw new Error('文件读取失败，请等待Termux同步');
 
                 const data = await res.json();
                 targetUrl = data.latest;
 
-                if (!targetUrl || targetUrl === 'null') throw new Error('未检测到运行中的Cpolar HTTP隧道');
+                // 关键修复：校验必须是cpolar公网域名，拦截本地127.0.0.1地址
+                if (!targetUrl || targetUrl === 'null' || !targetUrl.includes('cpolar.')) {
+                    throw new Error('获取到的不是cpolar公网隧道，请检查Termux脚本');
+                }
 
-                // 成功UI
+                // 成功状态UI
                 loadingIcon.classList.add('hidden');
                 statusBox.classList.remove('border-primary/40');
                 statusBox.classList.add('border-green-500/50');
@@ -133,7 +136,7 @@
                 }, 1000);
 
             } catch (err) {
-                // 失败UI
+                // 错误状态UI
                 loadingIcon.classList.add('hidden');
                 statusBox.classList.remove('border-primary/40');
                 statusBox.classList.add('border-red-500/50');
@@ -142,7 +145,7 @@
             }
         }
 
-        // 复制链接
+        // 复制链接功能
         copyBtn.addEventListener('click', async () => {
             if (!targetUrl) return;
             await navigator.clipboard.writeText(targetUrl);
@@ -150,7 +153,7 @@
             setTimeout(() => fetchDomain(), 1500);
         });
 
-        // 手动刷新按钮
+        // 手动刷新按钮绑定
         refreshBtn.addEventListener('click', fetchDomain);
 
         // 页面加载自动执行
