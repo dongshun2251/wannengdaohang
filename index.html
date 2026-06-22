@@ -147,6 +147,12 @@
         .btn-copy:hover {
             background: rgba(79, 209, 197, 0.08);
         }
+        /* 隐藏复制输入框 */
+        #copyInput{
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -169,6 +175,8 @@
         </div>
         <button class="btn-main" id="jumpBtn">立即访问</button>
         <button class="btn-copy" id="copyUrlBtn">复制目标链接</button>
+        <!-- 隐藏输入框用于降级复制 -->
+        <input id="copyInput" readonly>
     </div>
 
 <script>
@@ -224,13 +232,24 @@ document.getElementById("jumpBtn").onclick = () => {
     goJump();
 };
 
-// 复制链接
+// 【修复后的复制函数，双层兼容】
 document.getElementById("copyUrlBtn").addEventListener("click", async () => {
+    const input = document.getElementById("copyInput");
+    input.value = jumpUrl;
+    input.select();
+
     try {
+        // 优先使用现代剪贴板API
         await navigator.clipboard.writeText(jumpUrl);
-        alert("链接复制成功，直接粘贴访问！");
-    } catch (e) {
-        alert("复制失败，请手动复制：" + jumpUrl);
+        alert("✅ 链接复制成功，直接粘贴访问！");
+    } catch (err) {
+        // 降级方案：传统选中复制
+        const success = document.execCommand("copy");
+        if(success){
+            alert("✅ 链接复制成功！");
+        }else{
+            alert("❌ 自动复制失败，请手动复制链接：\n" + jumpUrl);
+        }
     }
 });
 
