@@ -4,18 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cpolar内网穿透跳转面板</title>
-    <!-- 公共CDN，GitHub Pages可正常加载 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
     <script>
-        // ==================== 【必须修改此处配置】====================
-        const TUNNEL_URL = "http://261d3731.r38.cpolar.top";     // cpolar临时公网域名
-        const LOCAL_SERVICE = "http://127.0.0.1:8080";  // Termux本地服务地址
-        const CPOLAR_RUN_CMD = "cpolar http 8080";       // Termux启动隧道命令
-        const COUNT_DOWN_SECOND = 10;                    // 自动跳转倒计时秒数
-        // ==========================================================
+        // ==================== 仅修改域名即可 ====================
+        const TUNNEL_URL = "http://261d3731.r38.cpolar.top";
+        const LOCAL_SERVICE = "";
+        const CPOLAR_RUN_CMD = "";
+        const COUNT_DOWN_SECOND = 5;
+        // ======================================================
     </script>
 
     <script>
@@ -59,7 +58,6 @@
     <canvas id="particles"></canvas>
 
     <div class="min-h-screen flex flex-col items-center justify-center p-4 py-10">
-        <!-- 主题切换 -->
         <div class="w-full max-w-lg flex justify-end mb-4">
             <button id="themeToggle" class="px-3 py-2 glass rounded-lg border border-white/10 hover:bg-white/10 transition">
                 <i class="fa fa-moon-o dark:hidden"></i>
@@ -68,7 +66,6 @@
             </button>
         </div>
 
-        <!-- 主卡片 -->
         <div class="glass rounded-2xl p-6 md:p-8 max-w-lg w-full shadow-2xl border border-white/10 dark:border-white/10 light:border-slate-200 light:bg-cardLight light:text-slate-800">
             <div class="text-center mb-6">
                 <i class="fa fa-server text-5xl text-primary animate-slow-pulse"></i>
@@ -77,7 +74,6 @@
                 <div id="nowTime" class="text-sm mt-2 text-warn"></div>
             </div>
 
-            <!-- 倒计时进度条 -->
             <div class="bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 mb-5">
                 <p class="text-center text-sm dark:text-slate-300 light:text-slate-600 mb-2">
                     <i class="fa fa-clock-o mr-1"></i>
@@ -88,7 +84,6 @@
                 </div>
             </div>
 
-            <!-- 三组地址复制区域 -->
             <div class="space-y-4 mb-5">
                 <div class="bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 break-all">
                     <p class="text-xs text-slate-400 mb-1">🌐 Cpolar公网隧道地址</p>
@@ -123,7 +118,6 @@
                 </div>
             </div>
 
-            <!-- 功能按钮 -->
             <div class="grid grid-cols-2 gap-3 mb-5">
                 <a id="jumpBtn" target="_blank" href="" class="py-3 text-center bg-primary hover:bg-primary/80 rounded-xl font-medium transition shadow-lg">
                     <i class="fa fa-external-link mr-1"></i>立即访问隧道
@@ -136,16 +130,13 @@
                 </button>
             </div>
 
-            <!-- 二维码弹窗 -->
             <div id="qrcodeBox" class="hidden bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 mb-5 text-center">
                 <canvas id="qrcodeCanvas" class="mx-auto"></canvas>
                 <p class="text-sm mt-2 text-slate-400">手机扫描二维码直接访问公网隧道</p>
                 <button id="closeQr" class="mt-3 px-4 py-1 bg-slate-600 rounded-lg text-sm">关闭二维码</button>
             </div>
 
-            <!-- 拓展功能区 -->
             <div class="border-t border-white/10 dark:border-white/10 light:border-slate-200 pt-5 space-y-5">
-                <!-- 访问统计 -->
                 <div>
                     <h3 class="font-medium mb-2"><i class="fa fa-bar-chart text-primary mr-1"></i>页面访问统计</h3>
                     <div class="flex items-center gap-3">
@@ -153,7 +144,6 @@
                         <button id="resetCount" class="text-xs px-2 py-1 bg-danger/20 rounded text-danger">清零统计</button>
                     </div>
                 </div>
-                <!-- 本地备忘 -->
                 <div>
                     <h3 class="font-medium mb-2"><i class="fa fa-sticky-note text-warn mr-1"></i>本地备忘（仅保存在浏览器）</h3>
                     <textarea id="noteText" class="w-full bg-cardDark dark:bg-slate-800 light:bg-white border border-slate-600 rounded-lg p-2 text-sm resize-none h-20 outline-none focus:border-primary transition" placeholder="记录隧道用途、到期时间、端口等信息..."></textarea>
@@ -162,7 +152,6 @@
                         <button id="clearNote" class="px-3 py-1 bg-slate-600 rounded text-sm"><i class="fa fa-trash"></i>清空</button>
                     </div>
                 </div>
-                <!-- 多隧道存储 -->
                 <div>
                     <h3 class="font-medium mb-2"><i class="fa fa-list text-secondary mr-1"></i>多条隧道快捷跳转</h3>
                     <div class="flex gap-2 mb-2">
@@ -181,6 +170,21 @@
     </div>
 
 <script>
-// 粒子背景动画
 const canvas = document.getElementById('particles');
-const ctx = canvas.getContext('2d'
+const ctx = canvas.getContext('2d');
+let w, h, particles = [];
+function resizeCanvas(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+class Particle{
+    constructor(){
+        this.x = Math.random()*w;
+        this.y = Math.random()*h;
+        this.r = Math.random()*1.5+0.5;
+        this.speedX = (Math.random()-0.5)*0.6;
+        this.speedY = (Math.random()-0.5)*0.6;
+    }
+   
