@@ -2,16 +2,249 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="1";url=http://261d3731.r38.cpolar.top">
-    <title>页面跳转</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面跳转中</title>
+    <!-- 防页面缓存 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- SEO 标准规范标签 -->
+    <link rel="canonical" href="">
     <style>
-        body {text-align:center;margin-top:100px;font-size:18px;}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", system-ui, sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            /* 渐变背景 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        /* 粒子网格背景 */
+        body::before{
+            content:"";
+            position:fixed;
+            width:100%;
+            height:100%;
+            background-image: radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px);
+            background-size:30px 30px;
+            opacity:0.4;
+            z-index:-1;
+        }
+        .box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-width: 480px;
+            width: 92%;
+            color: #fff;
+        }
+        .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: rotate 2s linear infinite;
+            display: inline-block;
+        }
+        @keyframes rotate {
+            from {transform: rotate(0deg);}
+            to {transform: rotate(360deg);}
+        }
+        h1 {
+            font-size: 26px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .tip {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        #count {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffe66d;
+            margin: 10px 0;
+        }
+        /* 倒计时进度条 */
+        .progress-wrap{
+            width:100%;
+            height:6px;
+            background:rgba(255,255,255,0.2);
+            border-radius:99px;
+            margin:24px 0;
+            overflow:hidden;
+        }
+        #progress{
+            height:100%;
+            background:#ffe66d;
+            border-radius:99px;
+            width:100%;
+            transition:1s linear;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 36px;
+            background: #fff;
+            color: #764ba2;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.3);
+        }
+        .btn-secondary{
+            background:rgba(255,255,255,0.2);
+            color:#fff;
+            margin:12px 8px 0;
+        }
+        .option-group{
+            margin-top:20px;
+            font-size:14px;
+            display:flex;
+            gap:16px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
     </style>
 </head>
 <body>
-    <div>
-        <h3>即将为您跳转到新页面</h3>
-        <p>1秒后自动跳转，如无反应：<a href="https://目标网址.com">点此访问</a></p>
+    <div class="box">
+        <div class="icon">⟳</div>
+        <h1>正在为您跳转站点</h1>
+        <p class="tip">页面将在 <span id="count">5</span> 秒后自动前往新地址</p>
+        <div class="progress-wrap">
+            <div id="progress"></div>
+        </div>
+        <div class="option-group">
+            <label>
+                <input type="checkbox" id="autoJump" checked> 开启自动跳转
+            </label>
+            <label>
+                <input type="checkbox" id="newTab"> 新标签打开
+            </label>
+        </div>
+        <br>
+        <button class="btn" id="goBtn">立即前往</button>
+        <br>
+        <button class="btn btn-secondary" id="copyBtn">复制目标网址</button>
     </div>
+
+<script>
+// ===================== 仅需修改此处配置 =====================
+const targetConfig = {
+    waitTime: 5, // 倒计时秒数
+    // 多域名分流配置
+    domainMap: {
+        "test1.com": "http://261d3731.r38.cpolar.top",
+    },
+    defaultUrl: "https://default-target.com" // 未匹配域名默认跳转地址
+};
+// ==========================================================
+
+// 1. 获取当前域名、拼接参数
+const currentHost = window.location.host;
+const urlSearch = window.location.search;
+let baseTargetUrl;
+
+// 多域名分流逻辑
+if(targetConfig.domainMap[currentHost]){
+    baseTargetUrl = targetConfig.domainMap[currentHost];
+}else{
+    baseTargetUrl = targetConfig.defaultUrl;
+}
+// 携带原页面参数完整跳转
+let targetUrl = baseTargetUrl + urlSearch;
+
+// 修改canonical标签
+document.querySelector("link[rel='canonical']").href = targetUrl;
+
+// 2. 来源记录统计
+if(document.referrer){
+    localStorage.setItem("jump_from_source", document.referrer);
+}
+console.log("来源页面:", document.referrer);
+console.log("最终跳转地址:", targetUrl);
+
+// 3. 移动端文案适配
+function isMobile(){
+    return /Android|iPhone|iPad|iPod|iOS/i.test(navigator.userAgent);
+}
+if(isMobile()){
+    document.querySelector(".tip").innerHTML = "手机访问优化跳转，<span id='count'>"+targetConfig.waitTime+"</span> 秒后自动前往";
+}
+
+// 4. 倒计时与进度条逻辑
+let time = targetConfig.waitTime;
+const countDom = document.getElementById("count");
+const progressDom = document.getElementById("progress");
+let jumpTimer = null;
+
+function doJump(){
+    const openNewTab = document.getElementById("newTab").checked;
+    if(openNewTab){
+        window.open(targetUrl,"_blank");
+    }else{
+        window.location.href = targetUrl;
+    }
+}
+
+jumpTimer = setInterval(()=>{
+    // 关闭自动跳转则停止倒计时
+    if(!document.getElementById("autoJump").checked) return;
+    time--;
+    countDom.innerText = time;
+    let percent = (time / targetConfig.waitTime) * 100;
+    progressDom.style.width = percent + "%";
+    if(time <= 0){
+        clearInterval(jumpTimer);
+        doJump();
+    }
+}, 1000);
+
+// 5. 立即跳转按钮
+document.getElementById("goBtn").addEventListener("click",()=>{
+    clearInterval(jumpTimer);
+    doJump();
+});
+
+// 6. 复制链接按钮
+document.getElementById("copyBtn").addEventListener("click",async ()=>{
+    try{
+        await navigator.clipboard.writeText(targetUrl);
+        alert("链接复制成功！可粘贴到浏览器访问");
+    }catch(err){
+        alert("复制失败，请手动复制地址："+targetUrl);
+    }
+});
+
+// 7. 网络离线监听
+window.addEventListener("offline",()=>{
+    alert("检测到网络断开，可点击复制链接手动访问目标站点");
+});
+
+// 8. 页面所有a标签统一替换地址（备用）
+document.querySelectorAll("a").forEach(item=>{
+    item.href = targetUrl;
+});
+</script>
 </body>
 </html>
