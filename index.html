@@ -2,599 +2,159 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 无JS兜底跳转 + 预加载隧道域名 -->
-    <meta http-equiv="refresh" content="5; url=https://751de8d7.r38.cpolar.top">
-    <link rel="prefetch" href="https://751de8d7.r38.cpolar.top">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="color-scheme" content="dark light">
-    <title>Cpolar隧道中转跳转</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
-        }
-        /* 美化滚动条 */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(79, 195, 247, 0.3);
-            border-radius: 2px;
-        }
-        /* 主题变量 */
-        :root {
-            --bg-1: #161a23;
-            --bg-2: #242b3b;
-            --card-bg: rgba(255,255,255,0.08);
-            --text-main: #f0f4fb;
-            --text-sub: #b0c4de;
-            --primary: #4fc3f7;
-            --primary-dark: #0288d1;
-            --success: #2ecc71;
-            --warn: #ff9800;
-            --danger: #f44336;
-            --btn-gradient: linear-gradient(90deg, #2196f3, #03a9f4);
-            --split-line: rgba(255,255,255,0.1);
-            --touch-min: 48px;
-        }
-        [data-theme="light"] {
-            --bg-1: #f0f4fb;
-            --bg-2: #e0e9f7;
-            --card-bg: rgba(255,255,255,0.75);
-            --text-main: #161a23;
-            --text-sub: #445470;
-            --split-line: rgba(0,0,0,0.1);
-        }
-        /* 系统深色自动匹配 */
-        @media (prefers-color-scheme: dark) {
-            html:not([data-theme="light"]) {
-                --bg-1: #161a23;
-                --bg-2: #242b3b;
-                --card-bg: rgba(255,255,255,0.08);
-                --text-main: #f0f4fb;
-                --text-sub: #b0c4de;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cpolar 隧道自动跳转</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 图标 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <!-- 自定义Tailwind配色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        cpolar: '#ff4f00',
+                        dark: '#0f172a'
+                    }
+                }
             }
         }
-        @media (prefers-color-scheme: light) {
-            html:not([data-theme="dark"]) {
-                --bg-1: #f0f4fb;
-                --bg-2: #e0e9f7;
-                --card-bg: rgba(255,255,255,0.75);
-                --text-main: #161a23;
-                --text-sub: #445470;
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .shadow-glow {
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.25);
             }
-        }
-        body {
-            min-height: 100vh;
-            background: linear-gradient(-45deg, var(--bg-1), var(--bg-2), #202a3d, #1c2433);
-            background-size: 400% 400%;
-            animation: bgFlow 15s ease infinite;
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-        @keyframes bgFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        /* 骨架加载屏 */
-        .skeleton {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .skeleton-item {
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            animation: skeletonShine 1.5s infinite linear;
-        }
-        @keyframes skeletonShine {
-            0% { opacity: 0.4; }
-            50% { opacity: 0.8; }
-            100% { opacity: 0.4; }
-        }
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 24px;
-            padding: 48px 32px;
-            max-width: 560px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
-            transition: transform 0.2s ease;
-            display: none;
-        }
-        .card.show {
-            display: block;
-        }
-        .card:hover {
-            transform: translateY(-4px);
-        }
-        h1 {
-            font-size: 28px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .desc {
-            color: var(--text-sub);
-            font-size: 15px;
-            line-height: 1.7;
-            margin-bottom: 12px;
-        }
-        .visit-count {
-            font-size:13px;
-            color:var(--text-sub);
-            margin-bottom:24px;
-            padding-bottom:16px;
-            border-bottom:1px solid var(--split-line);
-        }
-        .count-box {
-            background: rgba(79, 195, 247, 0.12);
-            border-radius: 16px;
-            padding: 26px 20px;
-            margin-bottom: 24px;
-        }
-        .progress-wrap {
-            width:100%;
-            height:6px;
-            background:rgba(255,255,255,0.1);
-            border-radius:3px;
-            margin-bottom:16px;
-            overflow:hidden;
-        }
-        .progress-bar {
-            height:100%;
-            background:var(--primary);
-            width:100%;
-            transition:width 1s linear;
-        }
-        .count-num {
-            font-size: 52px;
-            font-weight: bold;
-            color: var(--primary);
-            animation: breathe 2.5s ease-in-out infinite;
-            display: inline-block;
-        }
-        @keyframes breathe {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px #4fc3f750); }
-            50% { transform: scale(1.06); filter: drop-shadow(0 0 14px #4fc3f790); }
-        }
-        .domain-wrap {
-            margin: 16px 0;
-            word-break: break-all;
-            padding: 12px;
-            background: rgba(0,0,0,0.15);
-            border-radius: 10px;
-        }
-        .domain-text {
-            color: var(--primary);
-            font-size: 16px;
-        }
-        .qrcode-box {
-            margin:16px 0;
-            padding-top:16px;
-            border-top:1px solid var(--split-line);
-        }
-        #qrcode {
-            width:120px;
-            height:120px;
-            margin:0 auto;
-            background:#fff;
-            padding:8px;
-            border-radius:8px;
-        }
-        .qrcode-fail {
-            color: var(--text-sub);
-            font-size:13px;
-            margin-top:8px;
-            display:none;
-        }
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 10px 0 12px;
-        }
-        .jump-btn, .copy-btn, .theme-btn, .retry-btn, .reset-btn {
-            min-height: var(--touch-min);
-            padding: 12px 18px;
-            border-radius: 12px;
-            border: none;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.18s ease;
-        }
-        .jump-btn {
-            background: var(--btn-gradient);
-            color: white;
-            text-decoration: none;
-        }
-        .jump-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.35);
-        }
-        .jump-btn:active, .copy-btn:active, .reset-btn:active, .retry-btn:active {
-            transform: scale(0.96);
-        }
-        .copy-btn, .reset-btn {
-            background: rgba(255,255,255,0.12);
-            color: var(--text-main);
-        }
-        .copy-btn:hover, .reset-btn:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        .theme-btn {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            background: rgba(255,255,255,0.1);
-            padding: 8px 14px;
-            z-index:99;
-        }
-        .retry-btn {
-            background: var(--warn);
-            color: #000;
-            margin-top:8px;
-            display:none;
-        }
-        .statusTip {
-            font-size:14px;
-            margin:6px 0;
-        }
-        .errorTip {
-            color:var(--danger);
-            font-size:14px;
-            margin-top:10px;
-            display:none;
-        }
-        .tip-block {
-            text-align: left;
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.05);
-            font-size: 14px;
-            color: var(--text-sub);
-            line-height: 1.6;
-            border-top:1px solid var(--split-line);
-        }
-        .tip-block h4 {
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--success);
-            color: white;
-            padding: 10px 24px;
-            border-radius: 30px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index:999;
-        }
-        .toast.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .footer {
-            margin-top: 32px;
-            font-size: 12px;
-            color: var(--text-sub);
-            padding-top:16px;
-            border-top:1px solid var(--split-line);
-        }
-        /* 移动端适配 */
-        @media screen and (max-width:768px) {
-            .card {
-                padding: 32px 20px;
+            .spin-slow {
+                animation: spin 2s linear infinite;
             }
-            h1 {
-                font-size:24px;
-            }
-            .count-num {
-                font-size:42px;
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
             }
         }
     </style>
-    <!-- 二维码库延迟加载 -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" defer></script>
 </head>
-<body>
-    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题">切换明暗</button>
-
-    <!-- 加载骨架屏 -->
-    <div class="card skeleton" id="skeletonBox">
-        <div class="skeleton-item" style="height:32px;width:60%;margin:0 auto;"></div>
-        <div class="skeleton-item" style="height:18px;width:90%;margin:0 auto;"></div>
-        <div class="skeleton-item" style="height:200px;"></div>
-        <div class="skeleton-item" style="height:120px;"></div>
-    </div>
-
-    <!-- 主页面容器 -->
-    <div class="card" id="mainCard">
-        <h1>🔗 Cpolar隧道自动跳转</h1>
-        <p class="desc">临时域名有效期约24小时，重启cpolar后地址会变更</p>
-        <p class="visit-count">页面累计访问次数：<span id="countNumVisit">0</span></p>
-
-        <div class="count-box" id="countBox">
-            <div class="progress-wrap">
-                <div class="progress-bar" id="progressBar"></div>
+<body class="min-h-screen bg-gradient-to-br from-dark to-slate-900 flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-slate-800/60 backdrop-blur-md rounded-2xl p-8 shadow-glow border border-slate-700/50">
+        <!-- 头部标题 -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cpolar/10 text-cpolar text-3xl mb-4">
+                <i class="fa fa-link"></i>
             </div>
-            <div>
-                <span class="count-num" id="countNum">5</span>
-                <p>秒后自动跳转 | 悬停页面暂停倒计时</p>
-            </div>
-            <div class="domain-wrap">
-                <p>当前隧道地址：</p>
-                <p class="domain-text" id="domainText"></p>
-            </div>
-            <div class="qrcode-box">
-                <div id="qrcode"></div>
-                <p style="font-size:13px;margin-top:4px;">扫码直达站点</p>
-                <p class="qrcode-fail" id="qrFailTip">二维码加载失败，可手动复制域名访问</p>
-            </div>
-            <div class="btn-group">
-                <a id="jumpBtn" class="jump-btn" aria-label="立即访问cpolar站点">立即访问站点</a>
-                <button class="copy-btn" id="copyBtn" aria-label="复制隧道域名地址">复制域名地址</button>
-                <button class="reset-btn" id="resetBtn" aria-label="重置倒计时">重置倒计时</button>
-            </div>
-            <p class="statusTip" id="statusTip">状态：自动跳转运行中</p>
-            <p class="errorTip" id="errorTip">隧道离线，请检查Termux Cpolar是否启动</p>
-            <button class="retry-btn" id="retryBtn" aria-label="重新加载页面重试">重新加载页面</button>
+            <h1 class="text-[26px] font-bold text-white mb-2">Cpolar 隧道自动跳转</h1>
+            <p class="text-slate-400 text-sm">自动同步 Termux 最新临时公网域名</p>
         </div>
 
-        <div class="tip-block">
-            <h4>📖 更新域名教程</h4>
-            <p>1.Termux启动cpolar，复制新HTTPS域名</p>
-            <p>2.GitHub仓库编辑index.html，修改CPOLAR_DOMAIN</p>
-            <p>3.提交保存，等待Pages部署生效</p>
-            <br>
-            <h4>💡 启动隧道命令</h4>
-            <code>cpolar http 8080</code>
-            <br>
-            <h4>⌨️ 快捷键</h4>
-            <p>空格：暂停/恢复倒计时 | 回车：立刻跳转</p>
+        <!-- 状态展示区域 -->
+        <div id="status-box" class="rounded-xl bg-slate-900/70 p-6 mb-6 min-h-[140px] flex flex-col items-center justify-center text-center">
+            <div id="loading-icon" class="text-primary text-4xl spin-slow mb-3">
+                <i class="fa fa-circle-o-notch"></i>
+            </div>
+            <p id="status-text" class="text-slate-300 text-lg">正在拉取最新隧道地址...</p>
+            <p id="domain-text" class="text-cpolar font-mono mt-2 break-all hidden"></p>
         </div>
 
-        <div class="footer">静态中转页 · GitHub Pages部署</div>
-    </div>
+        <!-- 操作按钮 -->
+        <div class="grid grid-cols-2 gap-4">
+            <button id="refresh-btn" class="w-full py-3 rounded-lg bg-primary hover:bg-primary/80 text-white font-medium transition-all flex items-center justify-center gap-2">
+                <i class="fa fa-refresh"></i> 手动刷新域名
+            </button>
+            <button id="copy-btn" disabled class="w-full py-3 rounded-lg bg-slate-700 text-slate-500 font-medium cursor-not-allowed flex items-center justify-center gap-2">
+                <i class="fa fa-copy"></i> 复制隧道地址
+            </button>
+        </div>
 
-    <!-- 复制成功弹窗 -->
-    <div class="toast" id="toast" role="alert">复制域名成功！</div>
+        <!-- 底部说明 -->
+        <div class="mt-6 text-center text-xs text-slate-500">
+            <i class="fa fa-info-circle"></i> 域名由 Termux 定时同步至 domain.json，更新间隔30秒
+        </div>
+    </div>
 
     <script>
-        // ===================== 配置区，仅修改这里 =====================
-        const CPOLAR_DOMAIN = "http://751de8d7.r38.cpolar.top";
-        const WAIT_TIME = 10;
-        const TOAST_COOLDOWN = 2000; // 复制弹窗冷却时间
-        // ==========================================================
-        // DOM缓存
-        const dom = {
-            skeletonBox: document.getElementById("skeletonBox"),
-            mainCard: document.getElementById("mainCard"),
-            countNum: document.getElementById("countNum"),
-            domainText: document.getElementById("domainText"),
-            jumpBtn: document.getElementById("jumpBtn"),
-            copyBtn: document.getElementById("copyBtn"),
-            toast: document.getElementById("toast"),
-            statusTip: document.getElementById("statusTip"),
-            countBox: document.getElementById("countBox"),
-            themeBtn: document.getElementById("themeBtn"),
-            errorTip: document.getElementById("errorTip"),
-            retryBtn: document.getElementById("retryBtn"),
-            progressBar: document.getElementById("progressBar"),
-            resetBtn: document.getElementById("resetBtn"),
-            countNumVisit: document.getElementById("countNumVisit"),
-            qrcodeWrap: document.getElementById("qrcode"),
-            qrFailTip: document.getElementById("qrFailTip")
-        };
+        // DOM元素缓存
+        const statusBox = document.getElementById('status-box');
+        const loadingIcon = document.getElementById('loading-icon');
+        const statusText = document.getElementById('status-text');
+        const domainText = document.getElementById('domain-text');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const copyBtn = document.getElementById('copy-btn');
 
-        // 全局变量
-        let timer = null;
-        let pauseFlag = false;
-        let jumpDetectTimer = null;
-        let lastToastTime = 0;
-        let startTime = Date.now();
-        let remain = 0;
+        let targetUrl = '';
+        let countDownTimer = null;
 
-        // 捕获全局JS错误，降级原生跳转
-        window.onerror = function() {
-            dom.skeletonBox.style.display = "none";
-            dom.mainCard.classList.add("show");
-            dom.errorTip.style.display = "block";
-            dom.errorTip.innerText = "脚本加载异常，将使用原生跳转";
-            return true;
-        };
+        // 拉取域名核心函数
+        async function fetchDomain() {
+            // 重置UI状态
+            loadingIcon.classList.remove('hidden');
+            domainText.classList.add('hidden');
+            copyBtn.disabled = true;
+            copyBtn.className = 'w-full py-3 rounded-lg bg-slate-700 text-slate-500 font-medium cursor-not-allowed flex items-center justify-center gap-2';
+            statusText.textContent = '正在拉取最新隧道地址...';
+            statusBox.classList.remove('border-red-500/50', 'border-green-500/50');
+            statusBox.classList.add('border-primary/40');
 
-        // 初始化页面
-        function initPage() {
-            // 隐藏骨架，展示主页面
-            dom.skeletonBox.style.display = "none";
-            dom.mainCard.classList.add("show");
+            // 清除旧倒计时
+            if (countDownTimer) clearInterval(countDownTimer);
 
-            // 1.访问次数统计 + 缓存清理（超过30天清空）
-            const now = Date.now();
-            const saveTime = Number(localStorage.getItem("saveTime")) || now;
-            const dayDiff = (now - saveTime) / (1000 * 60 * 60 * 24);
-            if (dayDiff > 30) localStorage.clear();
-            localStorage.setItem("saveTime", now);
-
-            let visitTotal = Number(localStorage.getItem("visitTotal")) || 0;
-            visitTotal += 1;
-            localStorage.setItem("visitTotal", visitTotal);
-            dom.countNumVisit.innerText = visitTotal;
-
-            // 初始化域名与跳转链接
-            dom.domainText.innerText = CPOLAR_DOMAIN;
-            dom.jumpBtn.href = CPOLAR_DOMAIN;
-
-            // 二维码生成，失败捕获
-            if (window.QRCode) {
-                QRCode.toCanvas(dom.qrcodeWrap, CPOLAR_DOMAIN, { width:120, margin:1 }, err => {
-                    if (err) dom.qrFailTip.style.display = "block";
-                });
-            } else {
-                dom.qrFailTip.style.display = "block";
-            }
-
-            // 读取持久化倒计时
-            remain = parseInt(localStorage.getItem("countRemain")) || WAIT_TIME;
-            startTime = Date.now();
-            startCount();
-        }
-
-        // 精准倒计时（修正计时漂移）
-        function startCount() {
-            const elapse = Math.floor((Date.now() - startTime) / 1000);
-            const realRemain = Math.max(0, remain - elapse);
-            dom.countNum.innerText = realRemain;
-            dom.progressBar.style.width = (realRemain / WAIT_TIME * 100) + "%";
-            localStorage.setItem("countRemain", realRemain);
-
-            if (realRemain <= 0) {
-                window.location.href = CPOLAR_DOMAIN;
-                jumpDetectTimer = setTimeout(()=>{
-                    dom.errorTip.style.display = "block";
-                    dom.retryBtn.style.display = "inline-block";
-                    dom.statusTip.innerText = "状态：跳转超时，隧道疑似离线，自动重试一次";
-                    setTimeout(()=> window.location.href = CPOLAR_DOMAIN, 1000);
-                }, 2500);
-                return;
-            }
-            timer = setTimeout(startCount, 1000);
-        }
-
-        // 页面失焦节流省电
-        document.addEventListener("visibilitychange", ()=>{
-            if(document.hidden) clearTimeout(timer);
-            else if(!pauseFlag) {
-                startTime = Date.now();
-                startCount();
-            }
-        })
-
-        // 页面卸载清理定时器
-        window.addEventListener("beforeunload", ()=>{
-            clearTimeout(timer);
-            clearTimeout(jumpDetectTimer);
-        })
-
-        // 悬停暂停/移出恢复
-        dom.countBox.addEventListener("mouseenter", ()=>{
-            pauseFlag = true;
-            clearTimeout(timer);
-            dom.statusTip.innerText = "状态：倒计时已暂停";
-        })
-        dom.countBox.addEventListener("mouseleave", ()=>{
-            pauseFlag = false;
-            dom.statusTip.innerText = "状态：自动跳转运行中";
-            startTime = Date.now();
-            startCount();
-        })
-
-        // 复制域名（冷却防重复弹窗）
-        dom.copyBtn.addEventListener("click", async ()=>{
-            const now = Date.now();
-            if (now - lastToastTime < TOAST_COOLDOWN) return;
-            lastToastTime = now;
             try {
-                await navigator.clipboard.writeText(CPOLAR_DOMAIN);
-                dom.toast.classList.add("show");
-                setTimeout(()=>dom.toast.classList.remove("show"), TOAST_COOLDOWN);
-            } catch(err) {
-                dom.toast.innerText = "复制失败，请手动选中域名";
-                dom.toast.classList.add("show");
-                setTimeout(()=>dom.toast.classList.remove("show"), TOAST_COOLDOWN);
-            }
-        })
+                // 请求同仓库 domain.json
+                const res = await fetch('./domain.json?t=' + Date.now()); // 加时间戳防缓存
+                if (!res.ok) throw new Error('文件读取失败，请等待Termux同步');
 
-        // 重置倒计时
-        dom.resetBtn.addEventListener("click", ()=>{
-            clearTimeout(timer);
-            remain = WAIT_TIME;
-            localStorage.setItem("countRemain", remain);
-            pauseFlag = false;
-            dom.statusTip.innerText = "状态：自动跳转运行中";
-            startTime = Date.now();
-            startCount();
-        })
+                const data = await res.json();
+                targetUrl = data.latest;
 
-        // 重载页面
-        dom.retryBtn.addEventListener("click", ()=>{
-            localStorage.removeItem("countRemain");
-            location.reload();
-        })
+                if (!targetUrl || targetUrl === 'null') throw new Error('未检测到运行中的Cpolar HTTP隧道');
 
-        // 主题切换
-        function switchTheme() {
-            const html = document.documentElement;
-            const current = html.getAttribute("data-theme");
-            if(current === "light") {
-                html.removeAttribute("data-theme");
-                localStorage.setItem("siteTheme", "dark");
-            } else {
-                html.setAttribute("data-theme", "light");
-                localStorage.setItem("siteTheme", "light");
+                // 成功UI
+                loadingIcon.classList.add('hidden');
+                statusBox.classList.remove('border-primary/40');
+                statusBox.classList.add('border-green-500/50');
+                statusText.textContent = '获取到有效隧道地址，即将自动跳转';
+                domainText.textContent = targetUrl;
+                domainText.classList.remove('hidden');
+
+                // 启用复制按钮
+                copyBtn.disabled = false;
+                copyBtn.className = 'w-full py-3 rounded-lg bg-cpolar hover:bg-cpolar/80 text-white font-medium transition-all flex items-center justify-center gap-2';
+
+                // 3秒倒计时跳转
+                let sec = 3;
+                countDownTimer = setInterval(() => {
+                    sec--;
+                    statusText.textContent = `获取到有效隧道地址，${sec}秒后自动跳转`;
+                    if (sec <= 0) {
+                        clearInterval(countDownTimer);
+                        window.location.href = targetUrl;
+                    }
+                }, 1000);
+
+            } catch (err) {
+                // 失败UI
+                loadingIcon.classList.add('hidden');
+                statusBox.classList.remove('border-primary/40');
+                statusBox.classList.add('border-red-500/50');
+                statusText.textContent = `获取域名失败：${err.message}`;
+                domainText.classList.add('hidden');
             }
         }
-        dom.themeBtn.addEventListener("click", switchTheme);
-        // 读取本地主题
-        const saveTheme = localStorage.getItem("siteTheme");
-        if(saveTheme) document.documentElement.setAttribute("data-theme", saveTheme);
 
-        // 键盘快捷键
-        document.addEventListener("keydown", (e)=>{
-            if(e.code === "Space") {
-                e.preventDefault();
-                if(pauseFlag) {
-                    pauseFlag = false;
-                    dom.statusTip.innerText = "状态：自动跳转运行中";
-                    startTime = Date.now();
-                    startCount();
-                } else {
-                    pauseFlag = true;
-                    clearTimeout(timer);
-                    dom.statusTip.innerText = "状态：倒计时已暂停";
-                }
-            }
-            if(e.code === "Enter") {
-                clearTimeout(timer);
-                window.location.href = CPOLAR_DOMAIN;
-            }
-        })
+        // 复制链接
+        copyBtn.addEventListener('click', async () => {
+            if (!targetUrl) return;
+            await navigator.clipboard.writeText(targetUrl);
+            statusText.textContent = '隧道地址已复制到剪贴板！';
+            setTimeout(() => fetchDomain(), 1500);
+        });
 
-        // 窗口大小自适应
-        function resizeAdapt() {
-            const w = window.innerWidth;
-            if(w < 768) dom.mainCard.style.padding = "32px 20px";
-            else dom.mainCard.style.padding = "48px 32px";
-        }
-        window.addEventListener("resize", resizeAdapt);
+        // 手动刷新按钮
+        refreshBtn.addEventListener('click', fetchDomain);
 
-        // DOM加载完成后初始化
-        window.addEventListener("DOMContentLoaded", initPage);
+        // 页面加载自动执行
+        window.addEventListener('DOMContentLoaded', fetchDomain);
     </script>
 </body>
 </html>
