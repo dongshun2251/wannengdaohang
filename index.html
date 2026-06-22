@@ -1,15 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>自动跳转Cpolar地址</title>
-<script>
-const dest = "REPLACE_CPOLAR_URL";
-window.location.replace(dest);
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cpolar内网穿透跳转面板</title>
+    <!-- 公共CDN，GitHub Pages可正常加载 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+    <script>
+        // ==================== 【必须修改此处配置】====================
+        const TUNNEL_URL = "https://xxx.cpolar.top";     // cpolar临时公网域名
+        const LOCAL_SERVICE = "http://127.0.0.1:8080";  // Termux本地服务地址
+        const CPOLAR_RUN_CMD = "cpolar http 8080";       // Termux启动隧道命令
+        const COUNT_DOWN_SECOND = 10;                    // 自动跳转倒计时秒数
+        // ==========================================================
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981',
+                        warn: '#f59e0b',
+                        danger: '#ef4444',
+                        darkBg: '#0f172a',
+                        lightBg: '#f8fafc',
+                        cardDark: '#1e293b',
+                        cardLight: '#ffffff'
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass { backdrop-filter: blur(14px); }
+            .text-shadow { text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+            .animate-slow-pulse { animation: pulse 4s infinite; }
+        }
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 99px; }
+    </style>
 </head>
-<body>
-跳转地址：<span id="addr">REPLACE_CPOLAR_URL</span>
-<br>未跳转请点：<a href="REPLACE_CPOLAR_URL">链接</a>
-</body>
-</html>
+<body class="dark bg-darkBg text-slate-100 transition-colors duration-500">
+    <canvas id="particles"></canvas>
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-4 py-10">
+        <!-- 主题切换 -->
+        <div class="w-full max-w-lg flex justify-end mb-4">
+            <button id="themeToggle" class="px-3 py-2 glass rounded-lg border border-white/10 hover:bg-white/10 transition">
+                <i class="fa fa-moon-o dark:hidden"></i>
+                <i class="fa fa-sun-o hidden dark:inline"></i>
+                <span class="ml-1 text-sm">切换明暗</span>
+            </button>
+        </div>
+
+        <!-- 主卡片 -->
+        <div class="glass rounded-2xl p-6 md:p-8 max-w-lg w-full shadow-2xl border border-white/10 dark:border-white/10 light:border-slate-200 light:bg-cardLight light:text-slate-800">
+            <div class="text-center mb-6">
+                <i class="fa fa-server text-5xl text-primary animate-slow-pulse"></i>
+                <h1 class="text-[clamp(1.6rem,4vw,2.2rem)] font-bold mt-3 text-shadow">内网隧道跳转面板</h1>
+                <p class="text-slate-400 dark:text-slate-400 light:text-slate-500 mt-1">Termux Cpolar 临时公网入口</p>
+                <div id="nowTime" class="text-sm mt-2 text-warn"></div>
+            </div>
+
+            <!-- 倒计时进度条 -->
+            <div class="bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 mb-5">
+                <p class="text-center text-sm dark:text-slate-300 light:text-slate-600 mb-2">
+                    <i class="fa fa-clock-o mr-1"></i>
+                    <span id="countText">页面将在 <span id="countNum" class="text-primary font-bold text-xl">5</span> 秒后自动跳转</span>
+                </p>
+                <div class="w-full h-2 bg-slate-700 dark:bg-slate-700 light:bg-slate-300 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-primary w-full transition-all duration-1000"></div>
+                </div>
+            </div>
+
+            <!-- 三组地址复制区域 -->
+            <div class="space-y-4 mb-5">
+                <div class="bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 break-all">
+                    <p class="text-xs text-slate-400 mb-1">🌐 Cpolar公网隧道地址</p>
+                    <div class="flex gap-2 items-center">
+                        <code id="pubUrl" class="text-primary font-mono flex-1 overflow-x-auto"></code>
+                        <button class="copy-url shrink-0 px-2 py-1 bg-primary/20 hover:bg-primary/30 rounded" data-target="pubUrl">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-danger mt-1"><i class="fa fa-exclamation-circle"></i> 临时域名24小时失效，到期需更新本页面</p>
+                </div>
+                <div class="bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 break-all">
+                    <p class="text-xs text-slate-400 mb-1">💻 Termux本地服务地址</p>
+                    <div class="flex gap-2 items-center">
+                        <code id="localUrl" class="text-secondary font-mono flex-1 overflow-x-auto"></code>
+                        <button class="copy-url shrink-0 px-2 py-1 bg-secondary/20 hover:bg-secondary/30 rounded" data-target="localUrl">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 break-all">
+                    <p class="text-xs text-slate-400 mb-1">⚡ Termux启动隧道命令</p>
+                    <div class="flex gap-2 items-center">
+                        <code id="runCmd" class="text-warn font-mono flex-1 overflow-x-auto"></code>
+                        <button class="copy-url shrink-0 px-2 py-1 bg-warn/20 hover:bg-warn/30 rounded" data-target="runCmd">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="copyTip" class="hidden text-center text-sm text-secondary py-1 rounded bg-secondary/10">
+                    <i class="fa fa-check"></i> 复制成功！
+                </div>
+            </div>
+
+            <!-- 功能按钮 -->
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                <a id="jumpBtn" target="_blank" href="" class="py-3 text-center bg-primary hover:bg-primary/80 rounded-xl font-medium transition shadow-lg">
+                    <i class="fa fa-external-link mr-1"></i>立即访问隧道
+                </a>
+                <button id="stopTimerBtn" class="py-3 bg-slate-700 dark:bg-slate-700 light:bg-slate-200 hover:opacity-80 rounded-xl font-medium transition">
+                    <i class="fa fa-pause mr-1"></i>停止自动跳转
+                </button>
+                <button id="showQrcodeBtn" class="py-3 bg-secondary hover:opacity-80 rounded-xl font-medium transition col-span-2">
+                    <i class="fa fa-qrcode mr-1"></i>生成二维码（手机扫码直达）
+                </button>
+            </div>
+
+            <!-- 二维码弹窗 -->
+            <div id="qrcodeBox" class="hidden bg-cardDark dark:bg-cardDark light:bg-slate-100 rounded-xl p-4 mb-5 text-center">
+                <canvas id="qrcodeCanvas" class="mx-auto"></canvas>
+                <p class="text-sm mt-2 text-slate-400">手机扫描二维码直接访问公网隧道</p>
+                <button id="closeQr" class="mt-3 px-4 py-1 bg-slate-600 rounded-lg text-sm">关闭二维码</button>
+            </div>
+
+            <!-- 拓展功能区 -->
+            <div class="border-t border-white/10 dark:border-white/10 light:border-slate-200 pt-5 space-y-5">
+                <!-- 访问统计 -->
+                <div>
+                    <h3 class="font-medium mb-2"><i class="fa fa-bar-chart text-primary mr-1"></i>页面访问统计</h3>
+                    <div class="flex items-center gap-3">
+                        <span class="text-lg">累计访问：<span id="visitCount" class="text-primary font-bold">0</span> 次</span>
+                        <button id="resetCount" class="text-xs px-2 py-1 bg-danger/20 rounded text-danger">清零统计</button>
+                    </div>
+                </div>
+                <!-- 本地备忘 -->
+                <div>
+                    <h3 class="font-medium mb-2"><i class="fa fa-sticky-note text-warn mr-1"></i>本地备忘（仅保存在浏览器）</h3>
+                    <textarea id="noteText" class="w-full bg-cardDark dark:bg-slate-800 light:bg-white border border-slate-600 rounded-lg p-2 text-sm resize-none h-20 outline-none focus:border-primary transition" placeholder="记录隧道用途、到期时间、端口等信息..."></textarea>
+                    <div class="flex gap-2 mt-2">
+                        <button id="saveNote" class="px-3 py-1 bg-secondary rounded text-sm"><i class="fa fa-save"></i>保存备忘</button>
+                        <button id="clearNote" class="px-3 py-1 bg-slate-600 rounded text-sm"><i class="fa fa-trash"></i>清空</button>
+                    </div>
+                </div>
+                <!-- 多隧道存储 -->
+                <div>
+                    <h3 class="font-medium mb-2"><i class="fa fa-list text-secondary mr-1"></i>多条隧道快捷跳转</h3>
+                    <div class="flex gap-2 mb-2">
+                        <input id="newTunnelInput" class="flex-1 bg-cardDark dark:bg-slate-800 light:bg-white border border-slate-600 rounded p-1 text-sm outline-none focus:border-primary" placeholder="输入其他cpolar公网地址">
+                        <button id="addTunnel" class="px-2 bg-primary rounded text-sm">添加</button>
+                    </div>
+                    <div id="tunnelList" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-8 text-xs text-slate-500 text-center max-w-md">
+            <p>纯静态HTML页面 · 数据仅本地存储 · GitHub Pages托管 · Cpolar内网穿透专用</p>
+            <p class="mt-1">无后端、不上传隐私数据、支持离线打开</p>
+        </footer>
+    </div>
+
+<script>
+// 粒子背景动画
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d'
