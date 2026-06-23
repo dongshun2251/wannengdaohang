@@ -88,24 +88,30 @@ function applySavedTheme() {
     document.documentElement.setAttribute("data-theme", saved);
 }
 
-// 【核心】点击保存按钮，临时缓存写入正式配置并持久化，保存后自动刷新面板数据
+// 【核心修复】点击保存按钮，先缓存站点数组，避免覆盖清空，同步全部配置
 function doSaveConfig() {
-    // 1. 读取当前面板所有编辑内容存入临时缓存
+    // 第一步：缓存当前所有已添加站点，防止表单赋值覆盖清空
+    const saveDomainList = [...tempConfig.domainConfig];
+
+    // 第二步：仅更新基础配置项（倒计时、新标签、仓库地址、密码）
     tempConfig.waitSecond = Number(waitSecondInput.value) || 10;
     tempConfig.openNewTab = globalNewTabSwitch.checked;
     tempConfig.repoUrl = repoUrlInput.value.trim();
     tempConfig.adminPwd = adminPassword;
 
-    // 2. 临时配置完整同步到全局onlineConfig（导出数据源）
+    // 第三步：还原缓存的站点列表，保证添加的站点不丢失
+    tempConfig.domainConfig = saveDomainList;
+
+    // 第四步：临时缓存完整同步到全局onlineConfig（导出依赖的数据源）
     onlineConfig = JSON.parse(JSON.stringify(tempConfig));
 
-    // 3. 强制刷新弹窗临时缓存，保存后弹窗立刻显示最新站点，无需关闭重开
+    // 第五步：强制刷新弹窗临时缓存，保存后面板立刻刷新站点列表
     tempConfig = JSON.parse(JSON.stringify(onlineConfig));
 
-    // 4. 本地持久化存储，刷新页面不丢失数据
+    // 第六步：本地持久化存储，刷新页面不丢失数据
     saveLocalConfig();
 
-    // 5. 首页、管理员面板同步刷新渲染
+    // 第七步：首页、管理员面板同步刷新渲染
     renderAll();
     renderAdminDomainList();
     resetCountdown();
@@ -565,7 +571,7 @@ function renderAll() {
     updateJumpBtnStatus();
 }
 
-// 页面加载完成后初始化（修改：直接执行异步加载函数，先拉线上配置再渲染）
+// 页面加载完成后初始化（直接执行异步加载函数，先拉线上配置再渲染）
 window.addEventListener("load", loadOnlineConfig);
 // 离线提示
 window.addEventListener("offline", ()=>alert("网络断开，无法加载线上配置"));
