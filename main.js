@@ -88,17 +88,29 @@ function applySavedTheme() {
     document.documentElement.setAttribute("data-theme", saved);
 }
 
-// 【核心】点击保存按钮，临时缓存写入正式配置并持久化
+// 【核心】点击保存按钮，临时缓存写入正式配置并持久化，保存后自动刷新面板数据
 function doSaveConfig() {
+    // 1. 读取当前面板所有编辑内容存入临时缓存
     tempConfig.waitSecond = Number(waitSecondInput.value) || 10;
     tempConfig.openNewTab = globalNewTabSwitch.checked;
     tempConfig.repoUrl = repoUrlInput.value.trim();
     tempConfig.adminPwd = adminPassword;
+
+    // 2. 临时配置完整同步到全局onlineConfig（导出数据源）
     onlineConfig = JSON.parse(JSON.stringify(tempConfig));
+
+    // 3. 强制刷新弹窗临时缓存，保存后弹窗立刻显示最新站点，无需关闭重开
+    tempConfig = JSON.parse(JSON.stringify(onlineConfig));
+
+    // 4. 本地持久化存储，刷新页面不丢失数据
     saveLocalConfig();
+
+    // 5. 首页、管理员面板同步刷新渲染
     renderAll();
+    renderAdminDomainList();
     resetCountdown();
-    alert("配置保存成功！刷新页面、导出复制JSON均可同步配置");
+
+    alert("配置保存成功！当前面板已刷新，直接点导出即可复制完整站点JSON");
 }
 saveConfigBtn.addEventListener("click", doSaveConfig);
 
@@ -202,7 +214,6 @@ function autoSelectSiteOnLoad() {
 }
 
 // 加载线上config.json，带字段校验、异常提示
-// 修复：优先加载线上配置，失败才读取本地缓存，解决多设备站点不一致
 async function loadOnlineConfig() {
     // 页面初始显示加载提示，避免空白站点
     homeDomainWrap.innerHTML = "<div class='domain-empty'>正在加载线上站点配置...</div>";
@@ -262,10 +273,10 @@ function saveLocalConfig() {
     }));
 }
 
-// 导出配置：仅复制JSON到剪贴板，取消自动下载config.json文件
+// 导出配置：读取tempConfig，保存后立刻导出必有站点，取消自动下载config.json文件
 async function exportOnlineConfigFile() {
-    // 序列化完整配置（包含站点、仓库地址、密码、主题等全部数据）
-    const jsonStr = JSON.stringify(onlineConfig, null, 2);
+    // 读取当前最新编辑缓存，刚保存/新增站点直接导出，不受线上空白配置影响
+    const jsonStr = JSON.stringify(tempConfig, null, 2);
     // 复制文本到剪贴板
     try {
         await navigator.clipboard.writeText(jsonStr);
