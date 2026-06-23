@@ -2,21 +2,30 @@ name: 中转站自动部署Pages
 on:
   push:
     branches: [ main ]
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 jobs:
   deploy_site:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: 拉取仓库源码
+      - name: 拉取代码
         uses: actions/checkout@v4
-      - name: 配置Pages
+
+      - name: 设置Pages构建
         uses: actions/configure-pages@v5
-      - name: 打包网站文件
+
+      - name: 上传页面静态文件
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./
-      - name: 发布网站
+          path: '.' # 根目录全部文件上传（index.html/style.css/main.js/config.json）
+
+      - name: 部署到GitHub Pages
+        id: deploy
         uses: actions/deploy-pages@v4
