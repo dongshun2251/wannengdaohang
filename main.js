@@ -202,7 +202,10 @@ function autoSelectSiteOnLoad() {
 }
 
 // 加载线上config.json，带字段校验、异常提示
+// 修复：优先加载线上配置，失败才读取本地缓存，解决多设备站点不一致
 async function loadOnlineConfig() {
+    // 页面初始显示加载提示，避免空白站点
+    homeDomainWrap.innerHTML = "<div class='domain-empty'>正在加载线上站点配置...</div>";
     try {
         const res = await fetch("./config.json?t=" + Date.now());
         if (!res.ok) throw new Error("文件不存在或404");
@@ -212,22 +215,26 @@ async function loadOnlineConfig() {
         Object.keys(baseOnlineConfig).forEach(key => {
             if (rawData.hasOwnProperty(key)) fullData[key] = rawData[key];
         });
+        // 线上配置成功，直接覆盖全局配置
         onlineConfig = fullData;
         adminPassword = onlineConfig.adminPwd;
         onlineConfigLoaded = true;
         console.log("线上配置加载成功");
     } catch (e) {
         alert(`加载线上config.json失败：${e.message}\n将使用浏览器本地缓存配置`);
+        // 仅线上加载失败时，才读取本地缓存兜底
+        loadLocalConfig();
     }
-    loadLocalConfig();
+    // 同步到编辑临时缓存
     tempConfig = JSON.parse(JSON.stringify(onlineConfig));
+    // 应用主题、渲染页面、自动选站点、启动倒计时
     applySavedTheme();
     renderAll();
     autoSelectSiteOnLoad();
     resetCountdown();
 }
 
-// 读取本地缓存配置
+// 读取本地缓存配置（仅线上加载失败才执行）
 function loadLocalConfig() {
     const cacheStr = localStorage.getItem(STORAGE_KEY);
     if (!cacheStr) return;
@@ -255,7 +262,6 @@ function saveLocalConfig() {
     }));
 }
 
-// 导出配置文件+复制剪贴板
 // 导出配置：仅复制JSON到剪贴板，取消自动下载config.json文件
 async function exportOnlineConfigFile() {
     // 序列化完整配置（包含站点、仓库地址、密码、主题等全部数据）
@@ -418,7 +424,7 @@ function getJumpUrl() {
 }
 // 更新规范链接标签
 function updateCanonical() {
-    canonicalTag.href = currentSite ? getJumpUrl() : "";
+    if (canonicalTag) canonicalTag.href = currentSite ? getJumpUrl() : "";
 }
 // 执行跳转
 function goJump() {
@@ -548,7 +554,7 @@ function renderAll() {
     updateJumpBtnStatus();
 }
 
-// 页面加载完成后初始化
+// 页面加载完成后初始化（修改：直接执行异步加载函数，先拉线上配置再渲染）
 window.addEventListener("load", loadOnlineConfig);
 // 离线提示
 window.addEventListener("offline", ()=>alert("网络断开，无法加载线上配置"));
