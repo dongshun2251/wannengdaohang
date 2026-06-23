@@ -2,11 +2,18 @@ name: 中转站自动部署Pages
 on:
   push:
     branches: [ main ]
+  # 可选：手动触发部署按钮（方便调试）
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  # 并发控制：同一分支只保留最新一次部署，旧部署自动取消，避免排队冲突
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: true
 
 jobs:
   deploy_site:
@@ -15,17 +22,20 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: 拉取代码
+      - name: 拉取仓库代码
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 完整拉取历史（可选，静态站无所谓，不加也可）
 
-      - name: 设置Pages构建
+      - name: 配置GitHub Pages环境
         uses: actions/configure-pages@v5
 
-      - name: 上传页面静态文件
+      - name: 打包全站静态资源
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # 根目录全部文件上传（index.html/style.css/main.js/config.json）
+          path: '.'
+          retention-days: 30 # 制品保存30天，节省仓库存储
 
-      - name: 部署到GitHub Pages
+      - name: 部署至GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
