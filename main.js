@@ -278,12 +278,23 @@ function saveLocalConfig() {
         domainConfig: onlineConfig.domainConfig
     }));
 }
-
-// 导出配置：读取tempConfig，保存后立刻导出必有站点，取消自动下载config.json文件
+// 导出配置：复制剪贴板 + 自动下载 config.json 文件双功能
 async function exportOnlineConfigFile() {
-    // 读取当前最新编辑缓存，刚保存/新增站点直接导出，不受线上空白配置影响
+    // 读取当前最新编辑缓存，刚保存/新增站点直接导出
     const jsonStr = JSON.stringify(tempConfig, null, 2);
-    // 复制文本到剪贴板
+    
+    // 1. 自动下载 json 文件
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "config.json"; // 下载文件名
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // 2. 原有逻辑：复制文本到剪贴板
     try {
         await navigator.clipboard.writeText(jsonStr);
     } catch (err) {
