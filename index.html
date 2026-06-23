@@ -4,12 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>网站中转站</title>
-    <!-- 防缓存 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="canonical" href="">
     <style>
+        :root {
+            --main: #4fd1c5;
+            --main-dark: #319795;
+            --main-light: rgba(79, 209, 197, 0.2);
+            --danger: #ff7875;
+            --success: #36d399;
+            --bg-dark: #0f141e;
+            --card-bg: rgba(25, 32, 48, 0.95);
+            --text-white: #ffffff;
+            --text-gray: #a0b4c9;
+            --text-light: #c2d2e2;
+            --border-light: rgba(110, 230, 230, 0.15);
+            --transition: all 0.3s ease;
+        }
+        [data-theme="purple"] {
+            --main: #a78bfa;
+            --main-dark: #805ad5;
+            --main-light: rgba(167, 139, 250, 0.2);
+            --border-light: rgba(167, 139, 250, 0.15);
+        }
+        [data-theme="mint"] {
+            --main: #86efac;
+            --main-dark: #22c55e;
+            --main-light: rgba(134, 239, 172, 0.2);
+            --border-light: rgba(134, 239, 172, 0.15);
+        }
+        [data-theme="coral"] {
+            --main: #fdba74;
+            --main-dark: #f97316;
+            --main-light: rgba(253, 186, 116, 0.2);
+            --border-light: rgba(253, 186, 116, 0.15);
+        }
+        [data-theme="deepblue"] {
+            --main: #93c5fd;
+            --main-dark: #2563eb;
+            --main-light: rgba(147, 197, 253, 0.2);
+            --border-light: rgba(147, 197, 253, 0.15);
+        }
+        [data-theme="pink"] {
+            --main: #f9a8d4;
+            --main-dark: #db2777;
+            --main-light: rgba(249, 168, 212, 0.2);
+            --border-light: rgba(249, 168, 212, 0.15);
+        }
         * {
             margin: 0;
             padding: 0;
@@ -18,14 +61,16 @@
         }
         body {
             min-height: 100vh;
-            background: #0f141e;
+            background: linear-gradient(145deg, #0b101b, #141a29);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            padding: 20px 12px;
+            transition: var(--transition);
         }
-        /* 微弱星光背景 */
         body::before {
             content: "";
             position: fixed;
@@ -33,185 +78,950 @@
             height: 100%;
             background-image: radial-gradient(rgba(100, 220, 220, 0.12) 1px, transparent 1px);
             background-size: 40px 40px;
-            opacity: 0.6;
+            opacity: 0.5;
             z-index: -1;
         }
-        /* 主卡片 */
-        .jump-card {
-            background: rgba(25, 32, 48, 0.75);
-            backdrop-filter: blur(16px);
-            border-radius: 24px;
-            padding: 52px 36px;
-            width: 92%;
-            max-width: 440px;
-            text-align: center;
-            border: 1px solid rgba(110, 230, 230, 0.15);
-            box-shadow: 0 0 40px rgba(80, 200, 200, 0.08);
+        @keyframes borderGlow {
+            0%, 100% { box-shadow: 0 0 30px rgba(80, 200, 200, 0.06); }
+            50% { box-shadow: 0 0 45px rgba(80, 200, 200, 0.12); }
         }
-        /* 环形加载图标 */
+        .jump-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            border-radius: 26px;
+            padding: 32px 24px;
+            width: 94%;
+            max-width: 480px;
+            border: 1px solid var(--border-light);
+            animation: borderGlow 4s ease-in-out infinite;
+            margin-bottom: 20px;
+            transition: var(--transition);
+            position: relative;
+            overflow: visible;
+        }
+        .jump-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--main), transparent);
+            opacity: 0.4;
+        }
+        .theme-switch-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            background: rgba(255,255,255,0.08);
+            color: var(--text-white);
+            cursor: pointer;
+            font-size: 13px;
+            transition: var(--transition);
+            z-index: 10;
+        }
+        .theme-switch-btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: var(--main);
+        }
         .loader {
             width: 72px;
             height: 72px;
-            margin: 0 auto 24px;
+            margin: 0 auto 20px;
             border: 4px solid rgba(110, 230, 230, 0.15);
-            border-top-color: #4fd1c5;
+            border-top-color: var(--main);
             border-radius: 50%;
             animation: spin 1.2s linear infinite;
+            animation-play-state: running;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .loader.paused {
+            animation-play-state: paused;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
         h1 {
-            color: #ffffff;
-            font-size: 24px;
+            color: var(--text-white);
+            font-size: 22px;
             font-weight: 500;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
+            text-align: center;
         }
         .desc-text {
-            color: #a0b4c9;
-            font-size: 15px;
+            color: var(--text-gray);
+            font-size: 14px;
             line-height: 1.7;
+            text-align: center;
         }
         #count-num {
-            font-size: 52px;
+            font-size: 48px;
             font-weight: 700;
-            color: #4fd1c5;
-            margin: 12px 0 28px;
+            color: var(--main);
+            margin: 10px 0 24px;
+            text-align: center;
+            transition: var(--transition);
         }
-        /* 进度条 */
         .progress-box {
             width: 100%;
             height: 7px;
             background: rgba(255, 255, 255, 0.08);
             border-radius: 999px;
             overflow: hidden;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
         }
         .progress-bar {
             height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #4fd1c5, #38b2ac);
+            width: 0%;
+            background: linear-gradient(90deg, var(--main), var(--main-dark));
             border-radius: 999px;
             transition: width 1s linear;
+            position: relative;
+            overflow: hidden;
         }
-        /* 选项区域 */
-        .check-group {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 32px;
+        .progress-bar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: stream 1.5s infinite linear;
+        }
+        @keyframes stream { to { left: 100%; } }
+        .domain-list-box {
+            width: 100%;
+            margin-bottom: 24px;
+        }
+        .domain-list-box > label {
+            display: block;
+            color: var(--text-light);
             font-size: 14px;
-            color: #c2d2e2;
+            margin-bottom: 10px;
         }
-        .check-group label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .domain-empty {
+            text-align: center;
+            color: var(--text-gray);
+            padding: 16px 0;
+        }
+        .home-domain-item {
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-light);
+            margin-bottom: 8px;
+            transition: var(--transition);
             cursor: pointer;
         }
-        input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #4fd1c5;
+        .home-domain-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.07);
         }
-        /* 按钮样式 */
+        .home-domain-item.selected {
+            border-color: var(--main);
+            background: var(--main-light);
+        }
+        .home-domain-item.close-state {
+            opacity: 0.6;
+        }
+        .home-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .domain-name {
+            color: var(--text-white);
+            font-size: 15px;
+        }
+        .domain-url {
+            color: #8899aa;
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 6px;
+        }
+        .domain-status-tag-open {
+            color: var(--success);
+            font-size: 13px;
+        }
+        .domain-status-tag-close {
+            color: var(--danger);
+            font-size: 13px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 36px;
+        }
+        .btn-pause {
+            flex: 0 0 100px;
+            padding: 14px 6px;
+            border-radius: 14px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-pause:hover { background: rgba(255, 255, 255, 0.18); }
         .btn-main {
-            width: 100%;
-            padding: 15px;
+            flex: 1;
+            padding: 14px;
             border-radius: 14px;
             border: none;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.25s ease;
-            background: linear-gradient(135deg, #4fd1c5, #319795);
+            transition: var(--transition);
+            background: linear-gradient(135deg, var(--main), var(--main-dark));
             color: #0b131c;
+            position: relative;
+            overflow: hidden;
         }
-        .btn-main:hover {
+        .btn-main:disabled {
+            background: #444;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            filter: none;
+        }
+        .btn-main:hover:not(:disabled) {
             filter: brightness(1.15);
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(79, 209, 197, 0.25);
+        }
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: rippleAnim 0.5s linear;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+        .toggle-admin {
+            margin-top: 16px;
+            background: none;
+            border: none;
+            color: var(--main);
+            cursor: pointer;
+            text-decoration: underline;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+        .toggle-admin:hover { opacity: 0.8; }
+        .source-tip {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-gray);
+            text-align: center;
+            word-break: break-all;
+        }
+        .admin-modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9998;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        .admin-modal-box {
+            width: 100%;
+            max-width: 520px;
+            max-height: 85vh;
+            overflow-y: auto;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            padding: 28px 22px;
+            position: relative;
+        }
+        .admin-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-title {
+            color: var(--main);
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 20px;
+        }
+        .form-item { margin-bottom: 12px; }
+        .form-item label {
+            display: block;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .form-item input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-light);
+            color: #fff;
+            outline: none;
+            transition: var(--transition);
+        }
+        .form-item input:focus {
+            border-color: var(--main);
+            box-shadow: 0 0 8px var(--main-light);
+        }
+        .admin-check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            color: var(--text-light);
+        }
+        .admin-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .admin-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 110px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-login { background: var(--main); color: #0b131c; }
+        .btn-add { background: #667eea; color: #fff; }
+        .btn-logout { background: #ef4444; color: #fff; }
+        .btn-online-config { background: #f59e0b; color: #000; }
+        #fileInput { display: none; }
+        .admin-domain-wrap { margin-top: 12px; }
+        .admin-domain-title {
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .admin-domain-item {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-light);
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        .admin-domain-info {
+            flex: 1;
+            min-width: 140px;
+        }
+        .status-radio-group {
+            display: flex;
+            gap: 10px;
+        }
+        .status-radio-group label {
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .radio-open { color: var(--success); }
+        .radio-close { color: var(--danger); }
+        .domain-op-btn-group { display: flex; gap: 6px; }
+        .del-site-btn, .edit-site-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .del-site-btn { background: #ff4d4f; color: #fff; }
+        .edit-site-btn { background: #667eea; color: #fff; }
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 15px;
+        }
+        .modal-box {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid var(--border-light);
+        }
+        .modal-title {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+        }
+        .modal-cancel { background: #333; color: #fff; }
+        .modal-confirm { background: var(--main); color: #000; }
+        .tip-link {
+            color: #fdba74;
+            word-break: break-all;
         }
     </style>
 </head>
 <body>
     <div class="jump-card">
-        <div class="loader"></div>
+        <button class="theme-switch-btn" id="themeSwitchBtn">切换主题</button>
+        <div class="loader" id="circleLoader"></div>
         <h1>即将跳转至目标站点</h1>
-        <p class="desc-text">页面将在 <span id="count-num">5</span> 秒后自动跳转</p>
+        <p class="desc-text">页面将在 <span id="count-num"></span> 秒后自动跳转</p>
         <div class="progress-box">
             <div class="progress-bar" id="progress-bar"></div>
         </div>
-        <div class="check-group">
-            <label>
-                <input type="checkbox" id="autoJump" checked>
-                自动跳转
-            </label>
-            <label>
-                <input type="checkbox" id="newTab">
-                新标签打开
-            </label>
+        <div class="domain-list-box">
+            <label>选择目标站点：</label>
+            <div id="homeDomainWrap"></div>
         </div>
-        <button class="btn-main" id="jumpBtn">立即访问</button>
+        <div class="btn-row">
+            <button class="btn-pause" id="pauseBtn">暂停倒计时</button>
+            <button class="btn-main" id="jumpBtn">立即访问</button>
+        </div>
+        <div class="source-tip" id="sourceTip"></div>
+        <button class="toggle-admin" id="openAdminBtn">管理员配置面板</button>
+    </div>
+
+    <div class="admin-modal-mask" id="adminModalMask">
+        <div class="admin-modal-box" id="adminModalBox">
+            <button class="admin-modal-close" id="adminModalClose">×</button>
+            <h2 class="admin-title">管理员配置</h2>
+            <div id="loginArea">
+                <div class="form-item">
+                    <label>管理员密码</label>
+                    <input type="password" id="adminPwdInput" placeholder="输入管理员密码登录">
+                </div>
+                <div class="admin-buttons">
+                    <button class="admin-btn btn-login" id="loginBtn">登录</button>
+                </div>
+            </div>
+            <div id="editArea" style="display:none;">
+                <div class="form-item">
+                    <label>本地临时修改密码（仅本机生效）</label>
+                    <input type="password" id="newPwdInput" placeholder="新管理员密码">
+                </div>
+                <div class="form-item">
+                    <label>自动跳转倒计时(秒)</label>
+                    <input type="number" id="waitSecondInput" min="1" max="60">
+                </div>
+                <div class="admin-check-item">
+                    <input type="checkbox" id="globalNewTabSwitch">
+                    <label>默认新标签打开站点</label>
+                </div>
+                <h3 style="color:#fff;margin:16px 0 8px;font-size:15px;">新增站点（仅本机临时）</h3>
+                <div class="form-item">
+                    <label>站点名称</label>
+                    <input id="siteNameInput" placeholder="例如：主站点">
+                </div>
+                <div class="form-item">
+                    <label>站点URL</label>
+                    <input id="siteUrlInput" placeholder="http://xxx.r38.cpolar.top">
+                </div>
+                <div class="admin-domain-wrap" id="adminDomainWrap"></div>
+                <div class="admin-buttons">
+                    <button class="admin-btn btn-add" id="addSiteBtn">添加站点</button>
+                    <button class="admin-btn btn-logout" id="logoutBtn">登出账号</button>
+                    <button class="admin-btn btn-online-config" id="exportOnlineConfigBtn">导出仓库config.json</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="editModal">
+        <div class="modal-box">
+            <h3 class="modal-title">编辑站点（仅本机临时）</h3>
+            <input type="hidden" id="editSiteId">
+            <div class="form-item">
+                <label>站点名称</label>
+                <input id="editNameInput">
+            </div>
+            <div class="form-item">
+                <label>站点URL</label>
+                <input id="editUrlInput">
+            </div>
+            <div class="admin-check-item">
+                <input type="checkbox" id="editOpenCheck">
+                <label>站点已开放</label>
+            </div>
+            <div class="modal-btns">
+                <button class="modal-btn modal-cancel" id="modalCancel">取消</button>
+                <button class="modal-btn modal-confirm" id="modalSave">确认修改</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="tipModal">
+        <div class="modal-box">
+            <h3 class="modal-title">操作完成</h3>
+            <p style="color:#fff;line-height:1.8;text-align:center;">
+                config.json 已复制到剪贴板<br>
+                前往仓库配置：<br>
+                <a class="tip-link" target="_blank" href="https://github.com/dongshun2251/wannengdaohang/edit/main/config.json">https://github.com/dongshun2251/wannengdaohang/edit/main/config.json</a>
+            </p>
+            <div class="modal-btns" style="margin-top:20px;">
+                <button class="modal-btn modal-confirm" id="closeTipBtn">知道了</button>
+            </div>
+        </div>
     </div>
 
 <script>
-// ========== 修改这里两个参数即可 ==========
-const WAIT_SECOND = 5;
-const TARGET_WEB = "http://261d3731.r38.cpolar.top";
-// ==========================================
+const STORAGE_KEY = "jump_config";
+const LOGIN_STORAGE_KEY = "admin_is_login";
+const THEME_LIST = ["", "purple", "mint", "coral", "deepblue", "pink"];
+// 线上JSON基础模板：移除adminPwd、admin_is_login
+const baseOnlineConfig = {
+    waitSecond: 10,
+    openNewTab: true,
+    theme: "",
+    domainConfig: []
+};
+let onlineConfig = { ...baseOnlineConfig };
+let onlineConfigLoaded = false;
+let modalOpenPauseFlag = false;
 
-// 拼接原页面参数
-const params = window.location.search;
-let jumpUrl = TARGET_WEB + params;
+// DOM
+const openAdminBtn = document.getElementById("openAdminBtn");
+const adminModalMask = document.getElementById("adminModalMask");
+const adminModalClose = document.getElementById("adminModalClose");
+const loginArea = document.getElementById("loginArea");
+const editArea = document.getElementById("editArea");
+const logoutBtn = document.getElementById("logoutBtn");
+const circleLoader = document.getElementById("circleLoader");
+const themeSwitchBtn = document.getElementById("themeSwitchBtn");
 
-// 赋值canonical标签
-document.querySelector("link[rel='canonical']").href = jumpUrl;
-
-// 记录来源地址
-if(document.referrer) localStorage.setItem("jump_source", document.referrer);
-console.log("来路页面：", document.referrer, "跳转地址：", jumpUrl);
-
-// 移动端文字替换
-function isMobileDevice() {
-    return /Android|iPhone|iPad|iPod|iOS/.test(navigator.userAgent);
-}
-if(isMobileDevice()) {
-    document.querySelector(".desc-text").innerHTML = "移动端适配跳转，<span id='count-num'>"+WAIT_SECOND+"</span> 秒后自动前往";
-}
-
-// 倒计时进度逻辑
-let count = WAIT_SECOND;
 const countDom = document.getElementById("count-num");
 const barDom = document.getElementById("progress-bar");
-let timer = null;
+const pauseBtn = document.getElementById("pauseBtn");
+const jumpBtn = document.getElementById("jumpBtn");
+const homeDomainWrap = document.getElementById("homeDomainWrap");
+const adminDomainWrap = document.getElementById("adminDomainWrap");
+const canonicalTag = document.querySelector("link[rel='canonical']");
+const adminPwdInput = document.getElementById("adminPwdInput");
+const newPwdInput = document.getElementById("newPwdInput");
+const loginBtn = document.getElementById("loginBtn");
+const waitSecondInput = document.getElementById("waitSecondInput");
+const globalNewTabSwitch = document.getElementById("globalNewTabSwitch");
+const siteNameInput = document.getElementById("siteNameInput");
+const siteUrlInput = document.getElementById("siteUrlInput");
+const addSiteBtn = document.getElementById("addSiteBtn");
+const exportOnlineConfigBtn = document.getElementById("exportOnlineConfigBtn");
+const sourceTip = document.getElementById("sourceTip");
+const editModal = document.getElementById("editModal");
+const editSiteId = document.getElementById("editSiteId");
+const editNameInput = document.getElementById("editNameInput");
+const editUrlInput = document.getElementById("editUrlInput");
+const editOpenCheck = document.getElementById("editOpenCheck");
+const modalCancel = document.getElementById("modalCancel");
+const modalSave = document.getElementById("modalSave");
+const tipModal = document.getElementById("tipModal");
+const closeTipBtn = document.getElementById("closeTipBtn");
 
-function goJump() {
-    const blank = document.getElementById("newTab").checked;
-    blank ? window.open(jumpUrl, "_blank") : window.location.href = jumpUrl;
+let timer = null;
+let count = 0;
+let isPause = false;
+let currentSite = null;
+const params = window.location.search;
+// 登录状态仅存本地storage，不进线上配置
+let isAdminLogin = localStorage.getItem(LOGIN_STORAGE_KEY) === "1";
+// 管理员密码仅页面内存临时变量，不存入本地/线上JSON
+let adminPassword = "admin123";
+
+// 切换主题
+function switchTheme() {
+    const now = onlineConfig.theme;
+    let idx = THEME_LIST.indexOf(now);
+    idx = (idx + 1) % THEME_LIST.length;
+    onlineConfig.theme = THEME_LIST[idx];
+    saveLocalConfig();
+    document.body.dataset.theme = onlineConfig.theme;
+}
+themeSwitchBtn.addEventListener("click", switchTheme);
+
+// 水波纹
+function createRipple(e) {
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    ripple.style.left = x + "px";
+    ripple.style.top = y + "px";
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 500);
+}
+document.querySelectorAll("button").forEach(btn => btn.addEventListener("click", createRipple));
+
+// 弹窗自动暂停倒计时
+function openAdminModal() {
+    adminModalMask.style.display = "flex";
+    if (!isPause) {
+        modalOpenPauseFlag = true;
+        isPause = true;
+        pauseBtn.innerText = "恢复倒计时";
+        circleLoader.classList.add("paused");
+    }
+}
+function closeAdminModal() {
+    adminModalMask.style.display = "none";
+    if (modalOpenPauseFlag) {
+        modalOpenPauseFlag = false;
+        isPause = false;
+        pauseBtn.innerText = "暂停倒计时";
+        circleLoader.classList.remove("paused");
+    }
+}
+adminModalClose.addEventListener("click", closeAdminModal);
+openAdminBtn.addEventListener("click", openAdminModal);
+
+// 加载线上配置（不含密码、登录标记）
+async function loadOnlineConfig() {
+    try {
+        const res = await fetch("./config.json?t=" + Date.now());
+        if (!res.ok) throw "";
+        const data = await res.json();
+        // 只允许覆盖基础配置，过滤登录/密码字段
+        onlineConfig = {
+            ...baseOnlineConfig,
+            waitSecond: data.waitSecond ?? baseOnlineConfig.waitSecond,
+            openNewTab: data.openNewTab ?? baseOnlineConfig.openNewTab,
+            theme: data.theme ?? baseOnlineConfig.theme,
+            domainConfig: Array.isArray(data.domainConfig) ? data.domainConfig : []
+        };
+        onlineConfigLoaded = true;
+    } catch (e) {
+        console.log("无线上配置，使用默认");
+    }
+    loadLocalConfig();
+    document.body.dataset.theme = onlineConfig.theme;
+    renderAll();
 }
 
-timer = setInterval(() => {
-    if (!document.getElementById("autoJump").checked) return;
-    count--;
-    countDom.innerText = count;
-    barDom.style.width = (count / WAIT_SECOND) * 100 + "%";
-    if (count <= 0) {
-        clearInterval(timer);
-        goJump();
+// 读取本地缓存（仅业务配置，不含登录）
+function loadLocalConfig() {
+    const cacheStr = localStorage.getItem(STORAGE_KEY);
+    if (!cacheStr) return;
+    try {
+        const localData = JSON.parse(cacheStr);
+        onlineConfig.waitSecond = localData.waitSecond ?? onlineConfig.waitSecond;
+        onlineConfig.openNewTab = localData.openNewTab ?? onlineConfig.openNewTab;
+        onlineConfig.theme = localData.theme ?? onlineConfig.theme;
+        onlineConfig.domainConfig = Array.isArray(localData.domainConfig) ? localData.domainConfig : onlineConfig.domainConfig;
+    } catch (err) {}
+}
+
+// 保存本地业务配置（不包含adminPwd、admin_is_login）
+function saveLocalConfig() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        waitSecond: onlineConfig.waitSecond,
+        openNewTab: onlineConfig.openNewTab,
+        theme: onlineConfig.theme,
+        domainConfig: onlineConfig.domainConfig
+    }));
+}
+
+// 导出线上配置JSON（无密码、无登录状态）
+async function exportOnlineConfigFile() {
+    const jsonStr = JSON.stringify(onlineConfig, null, 2);
+    try {
+        await navigator.clipboard.writeText(jsonStr);
+    } catch (err) {
+        alert("复制失败，请手动复制：\n" + jsonStr);
+        return;
     }
-}, 1000);
+    tipModal.style.display = "flex";
+}
+function closeTipModal() { tipModal.style.display = "none"; }
 
-// 立即跳转按钮
-document.getElementById("jumpBtn").onclick = () => {
+// 重置本地业务配置，登录状态单独保留
+function resetDefaultConfig() {
+    if (!confirm("确认清空本机站点与主题配置？登录状态不会清除")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    onlineConfig = { ...baseOnlineConfig };
+    loadOnlineConfig();
+}
+
+// 登录：仅本地storage存标记，不写入业务配置JSON
+function doLogin() {
+    const inputPwd = adminPwdInput.value.trim();
+    if (inputPwd === adminPassword) {
+        isAdminLogin = true;
+        localStorage.setItem(LOGIN_STORAGE_KEY, "1");
+        loginArea.style.display = "none";
+        editArea.style.display = "block";
+        renderAll();
+    } else {
+        alert("密码错误");
+    }
+}
+loginBtn.addEventListener("click", doLogin);
+
+// 登出：仅清除本地登录标记，业务配置不动
+function logoutAdmin() {
+    isAdminLogin = false;
+    localStorage.removeItem(LOGIN_STORAGE_KEY);
+    loginArea.style.display = "block";
+    editArea.style.display = "none";
+    adminPwdInput.value = "";
+    closeAdminModal();
+    alert("已登出管理员");
+}
+logoutBtn.addEventListener("click", logoutAdmin);
+
+// 修改管理员密码（仅内存变量，不存任何缓存/线上JSON）
+function changeAdminPassword() {
+    const newPwd = newPwdInput.value.trim();
+    if (!newPwd) return alert("密码不能为空");
+    adminPassword = newPwd;
+    newPwdInput.value = "";
+    alert("管理员密码已修改（仅当前浏览器内存生效，不会导出/保存到配置文件）");
+}
+
+function genSiteId() { return "site_" + Date.now(); }
+function addNewSite() {
+    const name = siteNameInput.value.trim();
+    const url = siteUrlInput.value.trim();
+    if (!name || !url) return alert("站点名称和链接不能为空");
+    onlineConfig.domainConfig.push({ id: genSiteId(), name, url, open: false });
+    siteNameInput.value = "";
+    siteUrlInput.value = "";
+    saveLocalConfig();
+    renderAll();
+    alert("站点添加成功");
+}
+function deleteSite(siteId) {
+    const target = onlineConfig.domainConfig.find(s => s.id === siteId);
+    if (!target) return;
+    if (!confirm(`确定删除站点【${target.name}】（仅本机临时）？`)) return;
+    onlineConfig.domainConfig = onlineConfig.domainConfig.filter(item => item.id !== siteId);
+    saveLocalConfig();
+    renderAll();
+}
+function openEditModal(site) {
+    editSiteId.value = site.id;
+    editNameInput.value = site.name;
+    editUrlInput.value = site.url;
+    editOpenCheck.checked = site.open;
+    editModal.style.display = "flex";
+}
+function closeModal() { editModal.style.display = "none"; }
+function saveEditSite() {
+    const sid = editSiteId.value;
+    const name = editNameInput.value.trim();
+    const url = editUrlInput.value.trim();
+    const open = editOpenCheck.checked;
+    if (!name || !url) return alert("名称和链接不能为空");
+    const item = onlineConfig.domainConfig.find(s => s.id === sid);
+    if (item) {
+        item.name = name;
+        item.url = url;
+        item.open = open;
+        saveLocalConfig();
+        closeModal();
+        renderAll();
+    }
+}
+
+function renderHomeDomainList() {
+    homeDomainWrap.innerHTML = "";
+    const list = onlineConfig.domainConfig;
+    if (list.length === 0) {
+        homeDomainWrap.innerHTML = `<div class="domain-empty">暂无站点，请登录管理员添加</div>`;
+        currentSite = null;
+        return;
+    }
+    if (!currentSite) currentSite = list[0];
+    list.forEach(site => {
+        const div = document.createElement("div");
+        div.className = "home-domain-item " + (site.open ? "" : "close-state");
+        div.dataset.id = site.id;
+        if (currentSite && currentSite.id === site.id) div.classList.add("selected");
+        div.innerHTML = `
+            <div class="home-name-row">
+                <span class="domain-name">${site.name}</span>
+                <span class="${site.open ? 'domain-status-tag-open' : 'domain-status-tag-close'}">${site.open ? '已开放' : '未开放'}</span>
+            </div>
+            <div class="domain-url">${site.url}</div>
+        `;
+        div.addEventListener("click", () => selectSite(site.id));
+        homeDomainWrap.appendChild(div);
+    })
+}
+function renderAdminDomainList() {
+    adminDomainWrap.innerHTML = "";
+    if (!isAdminLogin || onlineConfig.domainConfig.length === 0) return;
+    const title = document.createElement("div");
+    title.className = "admin-domain-title";
+    title.innerText = "已添加站点管理（可编辑/删除/切换开放状态）";
+    adminDomainWrap.appendChild(title);
+    onlineConfig.domainConfig.forEach(site => {
+        const item = document.createElement("div");
+        item.className = "admin-domain-item";
+        item.dataset.id = site.id;
+        item.innerHTML = `
+            <div class="admin-domain-info">
+                <div class="domain-name">${site.name}</div>
+                <div class="domain-url">${site.url}</div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+                <div class="status-radio-group">
+                    <label class="radio-open">
+                        <input type="radio" name="stat_${site.id}" value="1" ${site.open ? "checked" : ""}>开放
+                    </label>
+                    <label class="radio-close">
+                        <input type="radio" name="stat_${site.id}" value="0" ${!site.open ? "checked" : ""}>关闭
+                    </label>
+                </div>
+                <div class="domain-op-btn-group">
+                    <button class="edit-site-btn" data-id="${site.id}">编辑</button>
+                    <button class="del-site-btn" data-id="${site.id}">删除</button>
+                </div>
+            </div>
+        `;
+        adminDomainWrap.appendChild(item);
+        const radios = item.querySelectorAll(`input[name="stat_${site.id}"]`);
+        radios.forEach(r => {
+            r.onchange = () => {
+                site.open = r.value === "1";
+                saveLocalConfig();
+            }
+        })
+        const editBtn = item.querySelector(".edit-site-btn");
+        editBtn.onclick = () => openEditModal(site);
+        const delBtn = item.querySelector(".del-site-btn");
+        delBtn.onclick = () => deleteSite(site.id);
+    })
+}
+function selectSite(siteId) {
+    currentSite = onlineConfig.domainConfig.find(s => s.id === siteId);
+    updateCanonical();
+    updateJumpBtnStatus();
+    resetCountdown();
+    renderHomeDomainList();
+}
+function updateJumpBtnStatus() { jumpBtn.disabled = !currentSite?.open; }
+function getJumpUrl() { return currentSite.url + params; }
+function updateCanonical() { canonicalTag.href = currentSite ? getJumpUrl() : ""; }
+function goJump() {
+    if (!currentSite || !currentSite.open) {
+        const openSite = onlineConfig.domainConfig.find(s => s.open);
+        alert(`该站点未开放！当前可跳转站点：${openSite?.name || "无开放站点"}`);
+        return;
+    }
     clearInterval(timer);
-    goJump();
-};
-
-// 断网提示
-window.addEventListener("offline", () => {
-    alert("网络连接中断");
+    const url = getJumpUrl();
+    if (onlineConfig.openNewTab) window.open(url, "_blank");
+    else location.href = url;
+}
+function resetCountdown() {
+    clearInterval(timer);
+    isPause = false;
+    modalOpenPauseFlag = false;
+    pauseBtn.innerText = "暂停倒计时";
+    count = Number(onlineConfig.waitSecond);
+    countDom.innerText = count;
+    barDom.style.width = "0%";
+    circleLoader.classList.remove("paused");
+    startTimer();
+}
+function startTimer() {
+    timer = setInterval(() => {
+        if (!currentSite || !currentSite.open || isPause) return;
+        count--;
+        countDom.innerText = count;
+        const total = onlineConfig.waitSecond;
+        const percent = ((total - count) / total) * 100;
+        barDom.style.width = percent + "%";
+        if (count <= 0) {
+            clearInterval(timer);
+            goJump();
+        }
+    }, 1000);
+}
+pauseBtn.addEventListener("click", () => {
+    if (modalOpenPauseFlag) return;
+    isPause = !isPause;
+    if (isPause) {
+        pauseBtn.innerText = "恢复倒计时";
+        circleLoader.classList.add("paused");
+    } else {
+        pauseBtn.innerText = "暂停倒计时";
+        circleLoader.classList.remove("paused");
+    }
 });
+exportOnlineConfigBtn.addEventListener("click", exportOnlineConfigFile);
+modalCancel.addEventListener("click", closeModal);
+modalSave.addEventListener("click", saveEditSite);
+editModal.addEventListener("click", e => { if (e.target === editModal) closeModal(); });
+addSiteBtn.addEventListener("click", addNewSite);
+jumpBtn.addEventListener("click", goJump);
+window.addEventListener("offline", () => alert("网络断开"));
+if (document.referrer) sourceTip.innerText = "来路页面：" + document.referrer;
+
+function renderAll() {
+    waitSecondInput.value = onlineConfig.waitSecond;
+    globalNewTabSwitch.checked = onlineConfig.openNewTab;
+    if (isAdminLogin) {
+        loginArea.style.display = "none";
+        editArea.style.display = "block";
+    } else {
+        loginArea.style.display = "block";
+        editArea.style.display = "none";
+    }
+    renderHomeDomainList();
+    renderAdminDomainList();
+    updateCanonical();
+    resetCountdown();
+}
+loadOnlineConfig();
 </script>
 </body>
 </html>
