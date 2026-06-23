@@ -73,7 +73,7 @@
                     <input type="number" id="siteWeightInput" value="1" min="0">
                 </div>
 
-                <p class="admin-warn-tip">⚠️ 新增/编辑/开关站点仅临时缓存，点击【保存配置】才会永久写入本地、导出文件生效</p>
+                <p class="admin-warn-tip">⚠️ 新增/编辑/开关站点仅临时缓存，点击【保存配置】才会永久生效，导出复制JSON同步至仓库</p>
                 <div class="admin-domain-wrap" id="adminDomainWrap"></div>
 
                 <div class="repo-wrap">
@@ -127,9 +127,9 @@
         <div class="modal-box">
             <h3 class="modal-title">操作完成</h3>
             <p style="color:#fff;line-height:1.8;text-align:center;">
-                config.json 已复制到剪贴板并自动下载文件<br>
-                包含：倒计时、新标签、主题、上次选中ID、仓库地址、站点(名称/链接/权重/开放/ID/管理员密码)<br>
-                管理员密码会存入线上配置文件，用于网页登录
+                完整配置JSON已复制到剪贴板（无文件下载）<br>
+                内容包含：倒计时、新标签、主题、上次选中ID、仓库地址、全部站点、管理员登录密码<br>
+                复制后打开仓库config.json，全选原有内容粘贴覆盖，提交即可全设备同步
             </p>
             <div class="modal-btns" style="margin-top:20px;">
                 <button class="modal-btn modal-confirm" id="closeTipBtn">知道了</button>
