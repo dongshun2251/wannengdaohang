@@ -98,7 +98,7 @@ function doSaveConfig() {
     saveLocalConfig();
     renderAll();
     resetCountdown();
-    alert("配置保存成功！刷新页面、导出文件都会生效");
+    alert("配置保存成功！刷新页面、导出复制JSON均可同步配置");
 }
 saveConfigBtn.addEventListener("click", doSaveConfig);
 
@@ -127,9 +127,19 @@ document.querySelectorAll("button").forEach(btn => btn.addEventListener("click",
 
 // 管理员弹窗开关
 function openAdminModal() {
+    // 拦截：线上配置还没加载完就打开面板，弹窗提示等待
+    if (!onlineConfigLoaded) {
+        alert("页面正在加载线上站点配置，请等待页面完全加载完成后，再打开管理员面板！");
+        return;
+    }
     adminModalMask.style.display = "flex";
+    // 关键修复：每次打开管理员面板，完整复制线上公共配置到临时编辑缓存
+    tempConfig = JSON.parse(JSON.stringify(onlineConfig));
+    // 自动回填仓库地址、倒计时、新标签开关到输入框
     syncConfigToTempAndForm();
+    // 重新渲染管理员站点列表，线上所有站点全部展示
     renderAdminDomainList();
+    // 弹窗打开自动暂停倒计时（原有逻辑保留）
     if (!isPause) {
         modalOpenPauseFlag = true;
         isPause = true;
@@ -246,26 +256,25 @@ function saveLocalConfig() {
 }
 
 // 导出配置文件+复制剪贴板
+// 导出配置：仅复制JSON到剪贴板，取消自动下载config.json文件
 async function exportOnlineConfigFile() {
+    // 序列化完整配置（包含站点、仓库地址、密码、主题等全部数据）
     const jsonStr = JSON.stringify(onlineConfig, null, 2);
+    // 复制文本到剪贴板
     try {
         await navigator.clipboard.writeText(jsonStr);
     } catch (err) {
-        alert("复制剪贴板失败，请手动复制文本：\n" + jsonStr);
+        // 剪贴板复制失败，弹出全部文本手动复制
+        alert("自动复制剪贴板失败，请手动复制下方全部文本：\n\n" + jsonStr);
+        return;
     }
-    // 自动下载文件
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "config.json";
-    document.body.appendChild(a);
-    a.click();
-    URL.revokeObjectURL(a.href);
-    a.remove();
-
+    // 弹出提示弹窗
     tipModal.style.display = "flex";
     const repo = onlineConfig.repoUrl.trim();
-    if (repo && isValidUrl(repo)) setTimeout(()=>window.open(repo, "_blank"), 500);
+    if (repo && isValidUrl(repo)) {
+        // 延迟打开仓库编辑页面，方便直接粘贴
+        setTimeout(()=>window.open(repo, "_blank"), 500);
+    }
 }
 closeTipBtn.addEventListener("click", () => tipModal.style.display = "none");
 exportOnlineConfigBtn.addEventListener("click", exportOnlineConfigFile);
@@ -278,10 +287,15 @@ function doLogin() {
         localStorage.setItem(LOGIN_STORAGE_KEY, "1");
         loginArea.style.display = "none";
         editArea.style.display = "block";
+        // 登录成功强制同步线上完整站点、仓库配置到编辑缓存
+        tempConfig = JSON.parse(JSON.stringify(onlineConfig));
         syncConfigToTempAndForm();
         renderAll();
         renderAdminDomainList();
-    } else alert("密码错误，请核对线上config.json内管理员密码");
+        alert("登录成功！已加载线上全部站点与仓库配置");
+    } else {
+        alert("密码错误，请核对仓库config.json内的adminPwd密码");
+    }
 }
 loginBtn.addEventListener("click", doLogin);
 // 登出管理员
