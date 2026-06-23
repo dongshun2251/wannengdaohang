@@ -1,13 +1,1 @@
-{
-  "waitSecond": 10,
-  "openNewTab": true,
-  "theme": "",
-  "domainConfig": [
-    {
-      "id": "site_1782195304444",
-      "name": "我的网站",
-      "url": "http://3bcb6b6f.r38.cpolar.top",
-      "open": true
-    }
-  ]
-}
+
