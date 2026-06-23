@@ -2,7 +2,7 @@
   "waitSecond": 10,
   "openNewTab": true,
   "theme": "",
-  "lastSelectSiteId": "site_1782195304444",
+  "lastSelectSiteId": "site_1782238468603_1qkz1p469do",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "admin123",
   "domainConfig": [
@@ -11,6 +11,13 @@
       "name": "我的网站",
       "url": "https://3bcb6b6f.r38.cpolar.top",
       "weight": 1,
+      "open": true
+    },
+    {
+      "id": "site_1782239069870_zo3flwbh5p",
+      "name": "哔哩哔哩",
+      "url": "https://m.bilibili.com/",
+      "weight": 2,
       "open": true
     }
   ]
