@@ -1,14 +1,12 @@
-
 {
   "waitSecond": 10,
   "openNewTab": true,
   "theme": "",
-  "adminPwd": "admin123",
   "domainConfig": [
     {
       "id": "site_1782195304444",
       "name": "我的网站",
-      "url": "http://261d3731.r38.cpolar.top",
+      "url": "http://3bcb6b6f.r38.cpolar.top",
       "open": true
     }
   ]
