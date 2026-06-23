@@ -109,6 +109,7 @@
             background: linear-gradient(90deg, transparent, var(--main), transparent);
             opacity: 0.4;
         }
+        /* 卡片内部右下角切换主题按钮 */
         .theme-switch-btn {
             position: absolute;
             right: 16px;
@@ -124,8 +125,9 @@
             z-index: 10;
         }
         .theme-switch-btn:hover {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.18);
             border-color: var(--main);
+            transform: translateY(-2px);
         }
         .loader {
             width: 72px;
@@ -323,6 +325,7 @@
             text-align: center;
             word-break: break-all;
         }
+        /* 管理员弹窗 */
         .admin-modal-mask {
             position: fixed;
             inset: 0;
@@ -545,7 +548,7 @@
             </div>
             <div id="editArea" style="display:none;">
                 <div class="form-item">
-                    <label>本地临时修改密码（仅本机生效）</label>
+                    <label>本地临时修改密码（仅当前页面内存生效，不会导出/保存）</label>
                     <input type="password" id="newPwdInput" placeholder="新管理员密码">
                 </div>
                 <div class="form-item">
@@ -562,8 +565,8 @@
                     <input id="siteNameInput" placeholder="例如：主站点">
                 </div>
                 <div class="form-item">
-                    <label>站点URL</label>
-                    <input id="siteUrlInput" placeholder="http://xxx.r38.cpolar.top">
+                    <label>站点URL（必须带 http:// 或 https://）</label>
+                    <input id="siteUrlInput" placeholder="https://xxx.com">
                 </div>
                 <div class="admin-domain-wrap" id="adminDomainWrap"></div>
                 <div class="admin-buttons">
@@ -584,7 +587,7 @@
                 <input id="editNameInput">
             </div>
             <div class="form-item">
-                <label>站点URL</label>
+                <label>站点URL（必须带 http:// 或 https://）</label>
                 <input id="editUrlInput">
             </div>
             <div class="admin-check-item">
@@ -603,8 +606,8 @@
             <h3 class="modal-title">操作完成</h3>
             <p style="color:#fff;line-height:1.8;text-align:center;">
                 config.json 已复制到剪贴板<br>
-                前往仓库配置：<br>
-                <a class="tip-link" target="_blank" href="https://github.com/dongshun2251/wannengdaohang/edit/main/config.json">https://github.com/dongshun2251/wannengdaohang/edit/main/config.json</a>
+                线上配置仅包含：倒计时、新标签、主题、站点列表<br>
+                不包含管理员密码、登录状态
             </p>
             <div class="modal-btns" style="margin-top:20px;">
                 <button class="modal-btn modal-confirm" id="closeTipBtn">知道了</button>
@@ -616,7 +619,7 @@
 const STORAGE_KEY = "jump_config";
 const LOGIN_STORAGE_KEY = "admin_is_login";
 const THEME_LIST = ["", "purple", "mint", "coral", "deepblue", "pink"];
-// 线上JSON基础模板：移除adminPwd、admin_is_login
+// 线上/导出JSON固定字段，不含密码、登录标记
 const baseOnlineConfig = {
     waitSecond: 10,
     openNewTab: true,
@@ -625,9 +628,9 @@ const baseOnlineConfig = {
 };
 let onlineConfig = { ...baseOnlineConfig };
 let onlineConfigLoaded = false;
-let modalOpenPauseFlag = false;
+let modalOpenPauseFlag = false; // 区分弹窗自动暂停与手动暂停
 
-// DOM
+// DOM元素
 const openAdminBtn = document.getElementById("openAdminBtn");
 const adminModalMask = document.getElementById("adminModalMask");
 const adminModalClose = document.getElementById("adminModalClose");
@@ -669,12 +672,13 @@ let count = 0;
 let isPause = false;
 let currentSite = null;
 const params = window.location.search;
-// 登录状态仅存本地storage，不进线上配置
+// 登录状态仅独立存在localStorage，不混入业务配置JSON
 let isAdminLogin = localStorage.getItem(LOGIN_STORAGE_KEY) === "1";
-// 管理员密码仅页面内存临时变量，不存入本地/线上JSON
+// 管理员密码仅页面内存临时变量，刷新重置，不落地任何存储
 let adminPassword = "admin123";
 
-// 切换主题
+// -------------------------- 工具函数 --------------------------
+/** 循环切换主题，持久化保存 */
 function switchTheme() {
     const now = onlineConfig.theme;
     let idx = THEME_LIST.indexOf(now);
@@ -685,7 +689,7 @@ function switchTheme() {
 }
 themeSwitchBtn.addEventListener("click", switchTheme);
 
-// 水波纹
+/** 按钮水波纹效果 */
 function createRipple(e) {
     const btn = e.currentTarget;
     const rect = btn.getBoundingClientRect();
@@ -700,7 +704,22 @@ function createRipple(e) {
 }
 document.querySelectorAll("button").forEach(btn => btn.addEventListener("click", createRipple));
 
-// 弹窗自动暂停倒计时
+/** URL合法性校验：必须http/https开头 */
+function isValidUrl(url) {
+    return /^https?:\/\/.+/.test(url.trim());
+}
+
+/** 检测URL是否重复 */
+function isUrlDuplicate(url, excludeId = null) {
+    return onlineConfig.domainConfig.some(item => item.url === url && item.id !== excludeId);
+}
+
+/** 生成唯一站点ID */
+function genSiteId() {
+    return "site_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+}
+
+// -------------------------- 管理员弹窗自动暂停逻辑 --------------------------
 function openAdminModal() {
     adminModalMask.style.display = "flex";
     if (!isPause) {
@@ -712,6 +731,7 @@ function openAdminModal() {
 }
 function closeAdminModal() {
     adminModalMask.style.display = "none";
+    // 仅弹窗自动暂停时才恢复，用户手动暂停不受影响
     if (modalOpenPauseFlag) {
         modalOpenPauseFlag = false;
         isPause = false;
@@ -722,43 +742,44 @@ function closeAdminModal() {
 adminModalClose.addEventListener("click", closeAdminModal);
 openAdminBtn.addEventListener("click", openAdminModal);
 
-// 加载线上配置（不含密码、登录标记）
+// -------------------------- 配置读写（隔离密码、登录） --------------------------
+/** 加载线上config.json，过滤登录/密码字段 */
 async function loadOnlineConfig() {
     try {
         const res = await fetch("./config.json?t=" + Date.now());
-        if (!res.ok) throw "";
+        if (!res.ok) throw new Error("无线上配置");
         const data = await res.json();
-        // 只允许覆盖基础配置，过滤登录/密码字段
+        // 仅合并允许字段，丢弃adminPwd、admin_is_login
         onlineConfig = {
             ...baseOnlineConfig,
-            waitSecond: data.waitSecond ?? baseOnlineConfig.waitSecond,
-            openNewTab: data.openNewTab ?? baseOnlineConfig.openNewTab,
-            theme: data.theme ?? baseOnlineConfig.theme,
+            waitSecond: Number(data.waitSecond) || baseOnlineConfig.waitSecond,
+            openNewTab: Boolean(data.openNewTab),
+            theme: data.theme || "",
             domainConfig: Array.isArray(data.domainConfig) ? data.domainConfig : []
         };
         onlineConfigLoaded = true;
     } catch (e) {
-        console.log("无线上配置，使用默认");
+        console.log(e.message);
     }
     loadLocalConfig();
     document.body.dataset.theme = onlineConfig.theme;
     renderAll();
 }
 
-// 读取本地缓存（仅业务配置，不含登录）
+/** 读取本地缓存业务配置（不含登录、密码） */
 function loadLocalConfig() {
     const cacheStr = localStorage.getItem(STORAGE_KEY);
     if (!cacheStr) return;
     try {
         const localData = JSON.parse(cacheStr);
-        onlineConfig.waitSecond = localData.waitSecond ?? onlineConfig.waitSecond;
-        onlineConfig.openNewTab = localData.openNewTab ?? onlineConfig.openNewTab;
+        onlineConfig.waitSecond = Number(localData.waitSecond) || onlineConfig.waitSecond;
+        onlineConfig.openNewTab = Boolean(localData.openNewTab);
         onlineConfig.theme = localData.theme ?? onlineConfig.theme;
         onlineConfig.domainConfig = Array.isArray(localData.domainConfig) ? localData.domainConfig : onlineConfig.domainConfig;
     } catch (err) {}
 }
 
-// 保存本地业务配置（不包含adminPwd、admin_is_login）
+/** 保存本地业务配置，严格剔除登录、密码 */
 function saveLocalConfig() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         waitSecond: onlineConfig.waitSecond,
@@ -768,7 +789,7 @@ function saveLocalConfig() {
     }));
 }
 
-// 导出线上配置JSON（无密码、无登录状态）
+/** 导出纯业务JSON，无任何登录、密码信息 */
 async function exportOnlineConfigFile() {
     const jsonStr = JSON.stringify(onlineConfig, null, 2);
     try {
@@ -779,17 +800,19 @@ async function exportOnlineConfigFile() {
     }
     tipModal.style.display = "flex";
 }
-function closeTipModal() { tipModal.style.display = "none"; }
+closeTipBtn.addEventListener("click", () => tipModal.style.display = "none");
+exportOnlineConfigBtn.addEventListener("click", exportOnlineConfigFile);
 
-// 重置本地业务配置，登录状态单独保留
+/** 重置本地站点与主题配置，保留登录状态 */
 function resetDefaultConfig() {
-    if (!confirm("确认清空本机站点与主题配置？登录状态不会清除")) return;
+    if (!confirm("确认清空本机站点、主题、倒计时配置？登录状态不会清除")) return;
     localStorage.removeItem(STORAGE_KEY);
     onlineConfig = { ...baseOnlineConfig };
     loadOnlineConfig();
 }
 
-// 登录：仅本地storage存标记，不写入业务配置JSON
+// -------------------------- 登录/登出/修改密码 --------------------------
+/** 管理员登录，仅本地存储登录标记 */
 function doLogin() {
     const inputPwd = adminPwdInput.value.trim();
     if (inputPwd === adminPassword) {
@@ -804,7 +827,7 @@ function doLogin() {
 }
 loginBtn.addEventListener("click", doLogin);
 
-// 登出：仅清除本地登录标记，业务配置不动
+/** 登出，仅清除本地登录标记 */
 function logoutAdmin() {
     isAdminLogin = false;
     localStorage.removeItem(LOGIN_STORAGE_KEY);
@@ -812,39 +835,57 @@ function logoutAdmin() {
     editArea.style.display = "none";
     adminPwdInput.value = "";
     closeAdminModal();
-    alert("已登出管理员");
+    alert("已退出管理员登录");
 }
 logoutBtn.addEventListener("click", logoutAdmin);
 
-// 修改管理员密码（仅内存变量，不存任何缓存/线上JSON）
+/** 修改内存管理员密码，不落地存储 */
 function changeAdminPassword() {
     const newPwd = newPwdInput.value.trim();
     if (!newPwd) return alert("密码不能为空");
     adminPassword = newPwd;
     newPwdInput.value = "";
-    alert("管理员密码已修改（仅当前浏览器内存生效，不会导出/保存到配置文件）");
+    alert("密码已修改，仅当前浏览器页面生效，刷新重置为默认admin123，不会导出到配置文件");
 }
 
-function genSiteId() { return "site_" + Date.now(); }
+// -------------------------- 站点增删改逻辑（修复编辑跳转BUG） --------------------------
+/** 添加站点，URL校验、重复拦截 */
 function addNewSite() {
     const name = siteNameInput.value.trim();
     const url = siteUrlInput.value.trim();
-    if (!name || !url) return alert("站点名称和链接不能为空");
-    onlineConfig.domainConfig.push({ id: genSiteId(), name, url, open: false });
+    if (!name || !url) return alert("站点名称、链接不能为空");
+    if (!isValidUrl(url)) return alert("链接格式错误，必须以 http:// 或 https:// 开头");
+    if (isUrlDuplicate(url)) return alert("该域名已存在，请勿重复添加");
+
+    onlineConfig.domainConfig.push({
+        id: genSiteId(),
+        name,
+        url,
+        open: false
+    });
     siteNameInput.value = "";
     siteUrlInput.value = "";
     saveLocalConfig();
     renderAll();
     alert("站点添加成功");
 }
+addSiteBtn.addEventListener("click", addNewSite);
+
+/** 删除站点 */
 function deleteSite(siteId) {
     const target = onlineConfig.domainConfig.find(s => s.id === siteId);
     if (!target) return;
-    if (!confirm(`确定删除站点【${target.name}】（仅本机临时）？`)) return;
+    if (!confirm(`确定删除站点【${target.name}】？`)) return;
     onlineConfig.domainConfig = onlineConfig.domainConfig.filter(item => item.id !== siteId);
+    // 如果删除的是当前选中站点，清空选中并重置倒计时
+    if (currentSite && currentSite.id === siteId) {
+        currentSite = null;
+    }
     saveLocalConfig();
     renderAll();
 }
+
+/** 打开编辑弹窗，回填数据 */
 function openEditModal(site) {
     editSiteId.value = site.id;
     editNameInput.value = site.name;
@@ -852,24 +893,38 @@ function openEditModal(site) {
     editOpenCheck.checked = site.open;
     editModal.style.display = "flex";
 }
-function closeModal() { editModal.style.display = "none"; }
+modalCancel.addEventListener("click", () => editModal.style.display = "none");
+
+/** 保存编辑站点 —— 核心修复：同步更新currentSite，解决倒计时不跳转 */
 function saveEditSite() {
     const sid = editSiteId.value;
     const name = editNameInput.value.trim();
     const url = editUrlInput.value.trim();
     const open = editOpenCheck.checked;
-    if (!name || !url) return alert("名称和链接不能为空");
-    const item = onlineConfig.domainConfig.find(s => s.id === sid);
-    if (item) {
-        item.name = name;
-        item.url = url;
-        item.open = open;
-        saveLocalConfig();
-        closeModal();
-        renderAll();
-    }
-}
+    if (!name || !url) return alert("站点名称、链接不能为空");
+    if (!isValidUrl(url)) return alert("链接格式错误，必须以 http:// 或 https:// 开头");
+    if (isUrlDuplicate(url, sid)) return alert("该域名已被其他站点使用");
 
+    const item = onlineConfig.domainConfig.find(s => s.id === sid);
+    if (!item) return;
+    // 更新站点数据
+    item.name = name;
+    item.url = url;
+    item.open = open;
+    saveLocalConfig();
+    editModal.style.display = "none";
+
+    // 关键修复：如果当前编辑的站点是正在倒计时的站点，强制刷新选中对象
+    if (currentSite && currentSite.id === sid) {
+        selectSite(sid);
+    }
+    renderAll();
+    alert("站点修改完成，倒计时已同步更新链接");
+}
+modalSave.addEventListener("click", saveEditSite);
+
+// -------------------------- 页面站点渲染与倒计时 --------------------------
+/** 渲染首页站点列表 */
 function renderHomeDomainList() {
     homeDomainWrap.innerHTML = "";
     const list = onlineConfig.domainConfig;
@@ -878,7 +933,6 @@ function renderHomeDomainList() {
         currentSite = null;
         return;
     }
-    if (!currentSite) currentSite = list[0];
     list.forEach(site => {
         const div = document.createElement("div");
         div.className = "home-domain-item " + (site.open ? "" : "close-state");
@@ -895,12 +949,14 @@ function renderHomeDomainList() {
         homeDomainWrap.appendChild(div);
     })
 }
+
+/** 渲染管理员站点列表 */
 function renderAdminDomainList() {
     adminDomainWrap.innerHTML = "";
     if (!isAdminLogin || onlineConfig.domainConfig.length === 0) return;
     const title = document.createElement("div");
     title.className = "admin-domain-title";
-    title.innerText = "已添加站点管理（可编辑/删除/切换开放状态）";
+    title.innerText = "已添加站点（点击编辑/删除）";
     adminDomainWrap.appendChild(title);
     onlineConfig.domainConfig.forEach(site => {
         const item = document.createElement("div");
@@ -932,6 +988,10 @@ function renderAdminDomainList() {
             r.onchange = () => {
                 site.open = r.value === "1";
                 saveLocalConfig();
+                // 若当前选中此站点，同步更新开放状态
+                if (currentSite && currentSite.id === site.id) {
+                    selectSite(site.id);
+                }
             }
         })
         const editBtn = item.querySelector(".edit-site-btn");
@@ -940,27 +1000,50 @@ function renderAdminDomainList() {
         delBtn.onclick = () => deleteSite(site.id);
     })
 }
+
+/** 切换选中站点，重置倒计时 */
 function selectSite(siteId) {
-    currentSite = onlineConfig.domainConfig.find(s => s.id === siteId);
+    const target = onlineConfig.domainConfig.find(s => s.id === siteId);
+    if (!target) return;
+    currentSite = target;
     updateCanonical();
     updateJumpBtnStatus();
     resetCountdown();
     renderHomeDomainList();
 }
-function updateJumpBtnStatus() { jumpBtn.disabled = !currentSite?.open; }
-function getJumpUrl() { return currentSite.url + params; }
-function updateCanonical() { canonicalTag.href = currentSite ? getJumpUrl() : ""; }
+
+/** 立即访问按钮可用性控制 */
+function updateJumpBtnStatus() {
+    jumpBtn.disabled = !(currentSite && currentSite.open);
+}
+
+/** 更新页面canonical链接 */
+function updateCanonical() {
+    canonicalTag.href = currentSite ? getJumpUrl() : "";
+}
+
+/** 获取跳转完整链接 */
+function getJumpUrl() {
+    return currentSite.url + params;
+}
+
+/** 倒计时结束跳转逻辑 */
 function goJump() {
     if (!currentSite || !currentSite.open) {
-        const openSite = onlineConfig.domainConfig.find(s => s.open);
-        alert(`该站点未开放！当前可跳转站点：${openSite?.name || "无开放站点"}`);
+        alert("当前站点未开放，无法自动跳转");
         return;
     }
     clearInterval(timer);
     const url = getJumpUrl();
-    if (onlineConfig.openNewTab) window.open(url, "_blank");
-    else location.href = url;
+    if (onlineConfig.openNewTab) {
+        window.open(url, "_blank");
+    } else {
+        location.href = url;
+    }
 }
+jumpBtn.addEventListener("click", goJump);
+
+/** 重置倒计时，清空计时并重启 */
 function resetCountdown() {
     clearInterval(timer);
     isPause = false;
@@ -972,8 +1055,11 @@ function resetCountdown() {
     circleLoader.classList.remove("paused");
     startTimer();
 }
+
+/** 启动倒计时定时器 */
 function startTimer() {
     timer = setInterval(() => {
+        // 无站点、站点关闭、暂停状态均停止计时
         if (!currentSite || !currentSite.open || isPause) return;
         count--;
         countDom.innerText = count;
@@ -986,6 +1072,8 @@ function startTimer() {
         }
     }, 1000);
 }
+
+/** 手动暂停/恢复倒计时（弹窗自动暂停期间禁止操作） */
 pauseBtn.addEventListener("click", () => {
     if (modalOpenPauseFlag) return;
     isPause = !isPause;
@@ -997,18 +1085,12 @@ pauseBtn.addEventListener("click", () => {
         circleLoader.classList.remove("paused");
     }
 });
-exportOnlineConfigBtn.addEventListener("click", exportOnlineConfigFile);
-modalCancel.addEventListener("click", closeModal);
-modalSave.addEventListener("click", saveEditSite);
-editModal.addEventListener("click", e => { if (e.target === editModal) closeModal(); });
-addSiteBtn.addEventListener("click", addNewSite);
-jumpBtn.addEventListener("click", goJump);
-window.addEventListener("offline", () => alert("网络断开"));
-if (document.referrer) sourceTip.innerText = "来路页面：" + document.referrer;
 
+/** 全局统一渲染入口 */
 function renderAll() {
     waitSecondInput.value = onlineConfig.waitSecond;
     globalNewTabSwitch.checked = onlineConfig.openNewTab;
+    // 登录区域切换
     if (isAdminLogin) {
         loginArea.style.display = "none";
         editArea.style.display = "block";
@@ -1018,10 +1100,14 @@ function renderAll() {
     }
     renderHomeDomainList();
     renderAdminDomainList();
-    updateCanonical();
+    updateJumpBtnStatus();
     resetCountdown();
 }
-loadOnlineConfig();
+
+// 页面初始化加载
+window.addEventListener("load", loadOnlineConfig);
+window.addEventListener("offline", () => alert("网络已断开"));
+if (document.referrer) sourceTip.innerText = "来路页面：" + document.referrer;
 </script>
 </body>
 </html>
