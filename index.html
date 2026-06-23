@@ -9,10 +9,64 @@
     <meta http-equiv="Expires" content="0">
     <link rel="canonical" href="">
     <style>
+        /* 全局主题变量统一管理，全页面统一调用 */
         :root {
+            /* 默认青柠主题 */
             --main: #4fd1c5;
             --main-dark: #319795;
             --main-light: rgba(79, 209, 197, 0.2);
+            --main-bg-light: rgba(79, 209, 197, 0.08);
+            --main-text: #0b131c;
+            --glow-shadow: rgba(79, 209, 197, 0.25);
+        }
+        /* 薰衣草紫 */
+        [data-theme="purple"] {
+            --main: #a78bfa;
+            --main-dark: #805ad5;
+            --main-light: rgba(167, 139, 250, 0.2);
+            --main-bg-light: rgba(167, 139, 250, 0.08);
+            --main-text: #100c1f;
+            --glow-shadow: rgba(167, 139, 250, 0.25);
+        }
+        /* 薄荷绿 */
+        [data-theme="mint"] {
+            --main: #86efac;
+            --main-dark: #22c55e;
+            --main-light: rgba(134, 239, 172, 0.2);
+            --main-bg-light: rgba(134, 239, 172, 0.08);
+            --main-text: #07170c;
+            --glow-shadow: rgba(134, 239, 172, 0.25);
+        }
+        /* 暖橙落日 */
+        [data-theme="coral"] {
+            --main: #fdba74;
+            --main-dark: #f97316;
+            --main-light: rgba(253, 186, 116, 0.2);
+            --main-bg-light: rgba(253, 186, 116, 0.08);
+            --main-text: #241304;
+            --glow-shadow: rgba(253, 186, 116, 0.25);
+        }
+        /* 深海蓝 */
+        [data-theme="deepblue"] {
+            --main: #93c5fd;
+            --main-dark: #2563eb;
+            --main-light: rgba(147, 197, 253, 0.2);
+            --main-bg-light: rgba(147, 197, 253, 0.08);
+            --main-text: #071224;
+            --glow-shadow: rgba(147, 197, 253, 0.25);
+        }
+        /* 蜜桃粉 */
+        [data-theme="pink"] {
+            --main: #f9a8d4;
+            --main-dark: #db2777;
+            --main-light: rgba(249, 168, 212, 0.2);
+            --main-bg-light: rgba(249, 168, 212, 0.08);
+            --main-text: #200815;
+            --glow-shadow: rgba(249, 168, 212, 0.25);
+        }
+
+        /* 固定深色底色，所有主题共用背景骨架 */
+        :root {
             --danger: #ff7875;
             --success: #36d399;
             --bg-dark: #0f141e;
@@ -23,36 +77,7 @@
             --border-light: rgba(110, 230, 230, 0.15);
             --transition: all 0.3s ease;
         }
-        [data-theme="purple"] {
-            --main: #a78bfa;
-            --main-dark: #805ad5;
-            --main-light: rgba(167, 139, 250, 0.2);
-            --border-light: rgba(167, 139, 250, 0.15);
-        }
-        [data-theme="mint"] {
-            --main: #86efac;
-            --main-dark: #22c55e;
-            --main-light: rgba(134, 239, 172, 0.2);
-            --border-light: rgba(134, 239, 172, 0.15);
-        }
-        [data-theme="coral"] {
-            --main: #fdba74;
-            --main-dark: #f97316;
-            --main-light: rgba(253, 186, 116, 0.2);
-            --border-light: rgba(253, 186, 116, 0.15);
-        }
-        [data-theme="deepblue"] {
-            --main: #93c5fd;
-            --main-dark: #2563eb;
-            --main-light: rgba(147, 197, 253, 0.2);
-            --border-light: rgba(147, 197, 253, 0.15);
-        }
-        [data-theme="pink"] {
-            --main: #f9a8d4;
-            --main-dark: #db2777;
-            --main-light: rgba(249, 168, 212, 0.2);
-            --border-light: rgba(249, 168, 212, 0.15);
-        }
+
         * {
             margin: 0;
             padding: 0;
@@ -82,8 +107,8 @@
             z-index: -1;
         }
         @keyframes borderGlow {
-            0%, 100% { box-shadow: 0 0 30px rgba(80, 200, 200, 0.06); }
-            50% { box-shadow: 0 0 45px rgba(80, 200, 200, 0.12); }
+            0%, 100% { box-shadow: 0 0 30px var(--main-light); }
+            50% { box-shadow: 0 0 45px var(--main-light); }
         }
         .jump-card {
             background: var(--card-bg);
@@ -92,7 +117,7 @@
             padding: 32px 24px;
             width: 94%;
             max-width: 480px;
-            border: 1px solid var(--border-light);
+            border: 1px solid var(--main-light);
             animation: borderGlow 4s ease-in-out infinite;
             margin-bottom: 20px;
             transition: var(--transition);
@@ -109,23 +134,23 @@
             background: linear-gradient(90deg, transparent, var(--main), transparent);
             opacity: 0.4;
         }
-        /* 卡片内部右下角切换主题按钮 */
         .theme-switch-btn {
             position: absolute;
             right: 16px;
-            bottom: 16px;
+            top: 16px;
             padding: 10px 14px;
             border-radius: 12px;
-            border: 1px solid var(--border-light);
-            background: rgba(255,255,255,0.08);
-            color: var(--text-white);
+            border: 1px solid var(--main-light);
+            background: var(--main-bg-light);
+            color: var(--main);
             cursor: pointer;
             font-size: 13px;
             transition: var(--transition);
             z-index: 10;
+            font-weight: 600;
         }
         .theme-switch-btn:hover {
-            background: rgba(255,255,255,0.18);
+            background: var(--main-light);
             border-color: var(--main);
             transform: translateY(-2px);
         }
@@ -133,7 +158,7 @@
             width: 72px;
             height: 72px;
             margin: 0 auto 20px;
-            border: 4px solid rgba(110, 230, 230, 0.15);
+            border: 4px solid var(--border-light);
             border-top-color: var(--main);
             border-radius: 50%;
             animation: spin 1.2s linear infinite;
@@ -218,7 +243,8 @@
         }
         .home-domain-item:hover {
             transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.07);
+            background: var(--main-bg-light);
+            border-color: var(--main-light);
         }
         .home-domain-item.selected {
             border-color: var(--main);
@@ -254,7 +280,7 @@
         .btn-row {
             display: flex;
             gap: 10px;
-            margin-bottom: 36px;
+            margin-bottom: 20px;
         }
         .btn-pause {
             flex: 0 0 100px;
@@ -270,7 +296,7 @@
             position: relative;
             overflow: hidden;
         }
-        .btn-pause:hover { background: rgba(255, 255, 255, 0.18); }
+        .btn-pause:hover { background: var(--main-bg-light); color: var(--main); }
         .btn-main {
             flex: 1;
             padding: 14px;
@@ -281,7 +307,7 @@
             cursor: pointer;
             transition: var(--transition);
             background: linear-gradient(135deg, var(--main), var(--main-dark));
-            color: #0b131c;
+            color: var(--main-text);
             position: relative;
             overflow: hidden;
         }
@@ -296,7 +322,26 @@
         .btn-main:hover:not(:disabled) {
             filter: brightness(1.15);
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(79, 209, 197, 0.25);
+            box-shadow: 0 8px 24px var(--glow-shadow);
+        }
+        .toggle-admin {
+            width: 100%;
+            margin-top: 8px;
+            padding: 12px;
+            border-radius: 14px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--main-bg-light);
+            color: var(--main);
+            position: relative;
+            overflow: hidden;
+        }
+        .toggle-admin:hover {
+            background: var(--main-light);
+            transform: translateY(-2px);
         }
         .ripple {
             position: absolute;
@@ -307,17 +352,6 @@
             pointer-events: none;
         }
         @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
-        .toggle-admin {
-            margin-top: 16px;
-            background: none;
-            border: none;
-            color: var(--main);
-            cursor: pointer;
-            text-decoration: underline;
-            transition: var(--transition);
-            font-size: 14px;
-        }
-        .toggle-admin:hover { opacity: 0.8; }
         .source-tip {
             margin-top: 12px;
             font-size: 12px;
@@ -325,7 +359,6 @@
             text-align: center;
             word-break: break-all;
         }
-        /* 管理员弹窗 */
         .admin-modal-mask {
             position: fixed;
             inset: 0;
@@ -344,7 +377,7 @@
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             border-radius: 24px;
-            border: 1px solid var(--border-light);
+            border: 1px solid var(--main-light);
             padding: 28px 22px;
             position: relative;
         }
@@ -355,15 +388,17 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            border: 1px solid var(--border-light);
-            background: rgba(255,255,255,0.08);
-            color: #fff;
+            border: 1px solid var(--main-light);
+            background: var(--main-bg-light);
+            color: var(--main);
             font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: var(--transition);
         }
+        .admin-modal-close:hover { background: var(--main-light); }
         .admin-title {
             color: var(--main);
             margin-bottom: 16px;
@@ -416,10 +451,18 @@
             position: relative;
             overflow: hidden;
         }
-        .btn-login { background: var(--main); color: #0b131c; }
+        .btn-login { background: linear-gradient(135deg, var(--main), var(--main-dark)); color: var(--main-text); }
         .btn-add { background: #667eea; color: #fff; }
         .btn-logout { background: #ef4444; color: #fff; }
-        .btn-online-config { background: #f59e0b; color: #000; }
+        .btn-save-main { background: linear-gradient(135deg, #34d399, #10b981); color: #000; }
+        .btn-sync-url {
+            background: #22c55e;
+            color: #000;
+            flex: unset;
+            white-space: nowrap;
+            padding: 10px 16px;
+        }
+        .btn-export-file { background: #f59e0b; color: #000; }
         #fileInput { display: none; }
         .admin-domain-wrap { margin-top: 12px; }
         .admin-domain-title {
@@ -467,6 +510,38 @@
         }
         .del-site-btn { background: #ff4d4f; color: #fff; }
         .edit-site-btn { background: #667eea; color: #fff; }
+
+        /* 仓库地址区域全新样式 */
+        .repo-wrap {
+            margin-top: 16px;
+        }
+        .repo-label {
+            display: block;
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        .repo-url-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .repo-url-row input {
+            flex: 1;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-light);
+            color: #fff;
+            outline: none;
+            transition: var(--transition);
+        }
+        .repo-url-row input:focus {
+            border-color: var(--main);
+            box-shadow: 0 0 8px var(--main-light);
+        }
+
         .modal-mask {
             position: fixed;
             inset: 0;
@@ -484,10 +559,10 @@
             backdrop-filter: blur(16px);
             border-radius: 20px;
             padding: 24px;
-            border: 1px solid var(--border-light);
+            border: 1px solid var(--main-light);
         }
         .modal-title {
-            color: #fff;
+            color: var(--main);
             font-size: 18px;
             margin-bottom: 16px;
             text-align: center;
@@ -505,9 +580,9 @@
             font-weight: 600;
         }
         .modal-cancel { background: #333; color: #fff; }
-        .modal-confirm { background: var(--main); color: #000; }
+        .modal-confirm { background: linear-gradient(135deg, var(--main), var(--main-dark)); color: var(--main-text); }
         .tip-link {
-            color: #fdba74;
+            color: var(--main);
             word-break: break-all;
         }
     </style>
@@ -522,7 +597,7 @@
             <div class="progress-bar" id="progress-bar"></div>
         </div>
         <div class="domain-list-box">
-            <label>选择目标站点：</label>
+            <label>选择目标站点</label>
             <div id="homeDomainWrap"></div>
         </div>
         <div class="btn-row">
@@ -568,11 +643,26 @@
                     <label>站点URL（必须带 http:// 或 https://）</label>
                     <input id="siteUrlInput" placeholder="https://xxx.com">
                 </div>
+                <div class="form-item">
+                    <label>站点权重（数字越小优先级越高，排队序号逻辑，默认1）</label>
+                    <input type="number" id="siteWeightInput" value="1" min="0">
+                </div>
                 <div class="admin-domain-wrap" id="adminDomainWrap"></div>
+
+                <div class="repo-wrap">
+                    <label class="repo-label">仓库配置地址</label>
+                    <div class="repo-url-row">
+                        <input id="repoUrlInput" placeholder="仓库配置编辑地址">
+                        <button class="admin-btn btn-sync-url" id="syncRepoUrlBtn">同步地址</button>
+                    </div>
+                </div>
+
+                <!-- 新增保存配置按钮 -->
                 <div class="admin-buttons">
+                    <button class="admin-btn btn-save-main" id="saveConfigBtn">保存配置</button>
                     <button class="admin-btn btn-add" id="addSiteBtn">添加站点</button>
                     <button class="admin-btn btn-logout" id="logoutBtn">登出账号</button>
-                    <button class="admin-btn btn-online-config" id="exportOnlineConfigBtn">导出仓库config.json</button>
+                    <button class="admin-btn btn-export-file" id="exportOnlineConfigBtn">导出.json文件</button>
                 </div>
             </div>
         </div>
@@ -590,6 +680,10 @@
                 <label>站点URL（必须带 http:// 或 https://）</label>
                 <input id="editUrlInput">
             </div>
+            <div class="form-item">
+                <label>站点权重（数字越小优先级越高，排队序号逻辑）</label>
+                <input type="number" id="editWeightInput" min="0">
+            </div>
             <div class="admin-check-item">
                 <input type="checkbox" id="editOpenCheck">
                 <label>站点已开放</label>
@@ -605,8 +699,8 @@
         <div class="modal-box">
             <h3 class="modal-title">操作完成</h3>
             <p style="color:#fff;line-height:1.8;text-align:center;">
-                config.json 已复制到剪贴板<br>
-                线上配置仅包含：倒计时、新标签、主题、站点列表<br>
+                config.json 已复制到剪贴板并自动下载文件<br>
+                包含：倒计时、新标签、主题、上次选中ID、仓库地址、站点(名称/链接/权重/开放/ID)<br>
                 不包含管理员密码、登录状态
             </p>
             <div class="modal-btns" style="margin-top:20px;">
@@ -618,19 +712,22 @@
 <script>
 const STORAGE_KEY = "jump_config";
 const LOGIN_STORAGE_KEY = "admin_is_login";
+// 完整6套主题列表
 const THEME_LIST = ["", "purple", "mint", "coral", "deepblue", "pink"];
-// 线上/导出JSON固定字段，不含密码、登录标记
 const baseOnlineConfig = {
     waitSecond: 10,
     openNewTab: true,
     theme: "",
+    lastSelectSiteId: "",
+    repoUrl: "",
     domainConfig: []
 };
 let onlineConfig = { ...baseOnlineConfig };
+// 临时缓存（编辑时暂存，不点保存不写入本地）
+let tempConfig = { ...baseOnlineConfig };
 let onlineConfigLoaded = false;
-let modalOpenPauseFlag = false; // 区分弹窗自动暂停与手动暂停
+let modalOpenPauseFlag = false;
 
-// DOM元素
 const openAdminBtn = document.getElementById("openAdminBtn");
 const adminModalMask = document.getElementById("adminModalMask");
 const adminModalClose = document.getElementById("adminModalClose");
@@ -639,6 +736,7 @@ const editArea = document.getElementById("editArea");
 const logoutBtn = document.getElementById("logoutBtn");
 const circleLoader = document.getElementById("circleLoader");
 const themeSwitchBtn = document.getElementById("themeSwitchBtn");
+const saveConfigBtn = document.getElementById("saveConfigBtn");
 
 const countDom = document.getElementById("count-num");
 const barDom = document.getElementById("progress-bar");
@@ -654,6 +752,7 @@ const waitSecondInput = document.getElementById("waitSecondInput");
 const globalNewTabSwitch = document.getElementById("globalNewTabSwitch");
 const siteNameInput = document.getElementById("siteNameInput");
 const siteUrlInput = document.getElementById("siteUrlInput");
+const siteWeightInput = document.getElementById("siteWeightInput");
 const addSiteBtn = document.getElementById("addSiteBtn");
 const exportOnlineConfigBtn = document.getElementById("exportOnlineConfigBtn");
 const sourceTip = document.getElementById("sourceTip");
@@ -661,35 +760,65 @@ const editModal = document.getElementById("editModal");
 const editSiteId = document.getElementById("editSiteId");
 const editNameInput = document.getElementById("editNameInput");
 const editUrlInput = document.getElementById("editUrlInput");
+const editWeightInput = document.getElementById("editWeightInput");
 const editOpenCheck = document.getElementById("editOpenCheck");
 const modalCancel = document.getElementById("modalCancel");
 const modalSave = document.getElementById("modalSave");
 const tipModal = document.getElementById("tipModal");
 const closeTipBtn = document.getElementById("closeTipBtn");
+const repoUrlInput = document.getElementById("repoUrlInput");
+const syncRepoUrlBtn = document.getElementById("syncRepoUrlBtn");
 
 let timer = null;
 let count = 0;
 let isPause = false;
 let currentSite = null;
 const params = window.location.search;
-// 登录状态仅独立存在localStorage，不混入业务配置JSON
 let isAdminLogin = localStorage.getItem(LOGIN_STORAGE_KEY) === "1";
-// 管理员密码仅页面内存临时变量，刷新重置，不落地任何存储
 let adminPassword = "admin123";
 
-// -------------------------- 工具函数 --------------------------
-/** 循环切换主题，持久化保存 */
+// 切换主题逻辑（全局独立，不受临时缓存影响）
 function switchTheme() {
     const now = onlineConfig.theme;
     let idx = THEME_LIST.indexOf(now);
     idx = (idx + 1) % THEME_LIST.length;
-    onlineConfig.theme = THEME_LIST[idx];
+    const newTheme = THEME_LIST[idx];
+    onlineConfig.theme = newTheme;
+    tempConfig.theme = newTheme;
     saveLocalConfig();
-    document.body.dataset.theme = onlineConfig.theme;
+    document.documentElement.setAttribute("data-theme", newTheme);
 }
 themeSwitchBtn.addEventListener("click", switchTheme);
 
-/** 按钮水波纹效果 */
+// 页面初始化加载保存的主题
+function applySavedTheme() {
+    const saved = onlineConfig.theme;
+    document.documentElement.setAttribute("data-theme", saved);
+}
+
+// 【核心】点击保存按钮，临时缓存写入正式配置并持久化
+function doSaveConfig() {
+    // 同步表单值到临时缓存
+    tempConfig.waitSecond = Number(waitSecondInput.value) || 10;
+    tempConfig.openNewTab = globalNewTabSwitch.checked;
+    tempConfig.repoUrl = repoUrlInput.value.trim();
+    // 临时缓存覆盖正式配置
+    onlineConfig = JSON.parse(JSON.stringify(tempConfig));
+    saveLocalConfig();
+    // 刷新页面渲染
+    renderAll();
+    alert("配置保存成功！");
+}
+saveConfigBtn.addEventListener("click", doSaveConfig);
+
+// 打开管理员弹窗时，同步正式配置到临时缓存+表单回填
+function syncConfigToTempAndForm() {
+    tempConfig = JSON.parse(JSON.stringify(onlineConfig));
+    waitSecondInput.value = tempConfig.waitSecond;
+    globalNewTabSwitch.checked = tempConfig.openNewTab;
+    repoUrlInput.value = tempConfig.repoUrl || "";
+}
+
 function createRipple(e) {
     const btn = e.currentTarget;
     const rect = btn.getBoundingClientRect();
@@ -704,24 +833,10 @@ function createRipple(e) {
 }
 document.querySelectorAll("button").forEach(btn => btn.addEventListener("click", createRipple));
 
-/** URL合法性校验：必须http/https开头 */
-function isValidUrl(url) {
-    return /^https?:\/\/.+/.test(url.trim());
-}
-
-/** 检测URL是否重复 */
-function isUrlDuplicate(url, excludeId = null) {
-    return onlineConfig.domainConfig.some(item => item.url === url && item.id !== excludeId);
-}
-
-/** 生成唯一站点ID */
-function genSiteId() {
-    return "site_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-}
-
-// -------------------------- 管理员弹窗自动暂停逻辑 --------------------------
 function openAdminModal() {
     adminModalMask.style.display = "flex";
+    syncConfigToTempAndForm();
+    renderAdminDomainList();
     if (!isPause) {
         modalOpenPauseFlag = true;
         isPause = true;
@@ -731,7 +846,6 @@ function openAdminModal() {
 }
 function closeAdminModal() {
     adminModalMask.style.display = "none";
-    // 仅弹窗自动暂停时才恢复，用户手动暂停不受影响
     if (modalOpenPauseFlag) {
         modalOpenPauseFlag = false;
         isPause = false;
@@ -742,92 +856,131 @@ function closeAdminModal() {
 adminModalClose.addEventListener("click", closeAdminModal);
 openAdminBtn.addEventListener("click", openAdminModal);
 
-// -------------------------- 配置读写（隔离密码、登录） --------------------------
-/** 加载线上config.json，过滤登录/密码字段 */
+// 仓库地址仅更新临时缓存，不自动保存
+syncRepoUrlBtn.addEventListener("click", ()=>{
+    const url = repoUrlInput.value.trim();
+    tempConfig.repoUrl = url;
+    alert("仓库地址已缓存，点击【保存配置】才会永久生效");
+});
+
+function isValidUrl(url) {
+    return /^https?:\/\/.+/.test(url.trim());
+}
+function isUrlDuplicate(url, excludeId = null) {
+    return tempConfig.domainConfig.some(item => item.url === url && item.id !== excludeId);
+}
+function genSiteId() {
+    return "site_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+}
+
+function getTopWeightOpenSite() {
+    const openList = onlineConfig.domainConfig.filter(s => s.open);
+    if (openList.length === 0) return null;
+    openList.sort((a, b) => Number(a.weight || 1) - Number(b.weight || 10));
+    return openList[0];
+}
+
+function autoSelectSiteOnLoad() {
+    const lastId = onlineConfig.lastSelectSiteId;
+    if (lastId) {
+        const last = onlineConfig.domainConfig.find(s => s.id === lastId && s.open);
+        if (last) {
+            selectSite(last.id);
+            return;
+        }
+    }
+    const topSite = getTopWeightOpenSite();
+    if (topSite) selectSite(topSite.id);
+}
+
 async function loadOnlineConfig() {
     try {
         const res = await fetch("./config.json?t=" + Date.now());
-        if (!res.ok) throw new Error("无线上配置");
+        if (!res.ok) throw "";
         const data = await res.json();
-        // 仅合并允许字段，丢弃adminPwd、admin_is_login
         onlineConfig = {
             ...baseOnlineConfig,
             waitSecond: Number(data.waitSecond) || baseOnlineConfig.waitSecond,
             openNewTab: Boolean(data.openNewTab),
             theme: data.theme || "",
+            lastSelectSiteId: data.lastSelectSiteId || "",
+            repoUrl: data.repoUrl || "",
             domainConfig: Array.isArray(data.domainConfig) ? data.domainConfig : []
         };
         onlineConfigLoaded = true;
-    } catch (e) {
-        console.log(e.message);
-    }
+    } catch (e) {}
     loadLocalConfig();
-    document.body.dataset.theme = onlineConfig.theme;
+    tempConfig = JSON.parse(JSON.stringify(onlineConfig));
+    applySavedTheme();
     renderAll();
+    autoSelectSiteOnLoad();
 }
-
-/** 读取本地缓存业务配置（不含登录、密码） */
 function loadLocalConfig() {
     const cacheStr = localStorage.getItem(STORAGE_KEY);
     if (!cacheStr) return;
     try {
         const localData = JSON.parse(cacheStr);
-        onlineConfig.waitSecond = Number(localData.waitSecond) || onlineConfig.waitSecond;
+        onlineConfig.waitSecond = Number(localData.waitSecond) ?? onlineConfig.waitSecond;
         onlineConfig.openNewTab = Boolean(localData.openNewTab);
-        onlineConfig.theme = localData.theme ?? onlineConfig.theme;
+        onlineConfig.theme = localData.theme ?? "";
+        onlineConfig.lastSelectSiteId = localData.lastSelectSiteId ?? "";
+        onlineConfig.repoUrl = localData.repoUrl ?? "";
         onlineConfig.domainConfig = Array.isArray(localData.domainConfig) ? localData.domainConfig : onlineConfig.domainConfig;
     } catch (err) {}
 }
-
-/** 保存本地业务配置，严格剔除登录、密码 */
+// 仅保存正式onlineConfig到本地
 function saveLocalConfig() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         waitSecond: onlineConfig.waitSecond,
         openNewTab: onlineConfig.openNewTab,
         theme: onlineConfig.theme,
+        lastSelectSiteId: onlineConfig.lastSelectSiteId,
+        repoUrl: onlineConfig.repoUrl,
         domainConfig: onlineConfig.domainConfig
     }));
 }
 
-/** 导出纯业务JSON，无任何登录、密码信息 */
+// 导出：复制剪贴板 + 自动下载 config.json
 async function exportOnlineConfigFile() {
     const jsonStr = JSON.stringify(onlineConfig, null, 2);
+    // 1. 复制到剪贴板（保留原有功能）
     try {
         await navigator.clipboard.writeText(jsonStr);
     } catch (err) {
-        alert("复制失败，请手动复制：\n" + jsonStr);
-        return;
+        alert("复制剪贴板失败，请手动复制文本：\n" + jsonStr);
     }
+    // 2. 自动下载 config.json 文件
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "config.json";
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    a.remove();
+
+    // 弹窗提示
     tipModal.style.display = "flex";
+    const repo = onlineConfig.repoUrl.trim();
+    if (repo && isValidUrl(repo)) {
+        window.open(repo, "_blank");
+    }
 }
 closeTipBtn.addEventListener("click", () => tipModal.style.display = "none");
 exportOnlineConfigBtn.addEventListener("click", exportOnlineConfigFile);
 
-/** 重置本地站点与主题配置，保留登录状态 */
-function resetDefaultConfig() {
-    if (!confirm("确认清空本机站点、主题、倒计时配置？登录状态不会清除")) return;
-    localStorage.removeItem(STORAGE_KEY);
-    onlineConfig = { ...baseOnlineConfig };
-    loadOnlineConfig();
-}
-
-// -------------------------- 登录/登出/修改密码 --------------------------
-/** 管理员登录，仅本地存储登录标记 */
 function doLogin() {
-    const inputPwd = adminPwdInput.value.trim();
-    if (inputPwd === adminPassword) {
+    const p = adminPwdInput.value.trim();
+    if (p === adminPassword) {
         isAdminLogin = true;
         localStorage.setItem(LOGIN_STORAGE_KEY, "1");
         loginArea.style.display = "none";
         editArea.style.display = "block";
+        syncConfigToTempAndForm();
         renderAll();
-    } else {
-        alert("密码错误");
-    }
+    } else alert("密码错误");
 }
 loginBtn.addEventListener("click", doLogin);
-
-/** 登出，仅清除本地登录标记 */
 function logoutAdmin() {
     isAdminLogin = false;
     localStorage.removeItem(LOGIN_STORAGE_KEY);
@@ -835,99 +988,162 @@ function logoutAdmin() {
     editArea.style.display = "none";
     adminPwdInput.value = "";
     closeAdminModal();
-    alert("已退出管理员登录");
+    alert("已登出");
 }
 logoutBtn.addEventListener("click", logoutAdmin);
-
-/** 修改内存管理员密码，不落地存储 */
 function changeAdminPassword() {
-    const newPwd = newPwdInput.value.trim();
-    if (!newPwd) return alert("密码不能为空");
-    adminPassword = newPwd;
+    const p = newPwdInput.value.trim();
+    if (!p) return alert("密码不能为空");
+    adminPassword = p;
     newPwdInput.value = "";
-    alert("密码已修改，仅当前浏览器页面生效，刷新重置为默认admin123，不会导出到配置文件");
+    alert("密码仅当前页面生效，刷新重置，不存入配置");
 }
 
-// -------------------------- 站点增删改逻辑（修复编辑跳转BUG） --------------------------
-/** 添加站点，URL校验、重复拦截 */
+// 添加站点仅写入临时缓存
 function addNewSite() {
     const name = siteNameInput.value.trim();
     const url = siteUrlInput.value.trim();
-    if (!name || !url) return alert("站点名称、链接不能为空");
-    if (!isValidUrl(url)) return alert("链接格式错误，必须以 http:// 或 https:// 开头");
-    if (isUrlDuplicate(url)) return alert("该域名已存在，请勿重复添加");
-
-    onlineConfig.domainConfig.push({
+    const weight = Number(siteWeightInput.value) || 1;
+    if (!name || !url) return alert("名称、链接不能为空");
+    if (!isValidUrl(url)) return alert("链接必须 http/https 开头");
+    if (isUrlDuplicate(url)) return alert("该域名已存在");
+    tempConfig.domainConfig.push({
         id: genSiteId(),
         name,
         url,
+        weight,
         open: false
     });
     siteNameInput.value = "";
     siteUrlInput.value = "";
-    saveLocalConfig();
-    renderAll();
-    alert("站点添加成功");
+    siteWeightInput.value = "10";
+    renderAdminDomainList();
+    alert("站点已缓存，点击【保存配置】永久生效");
 }
 addSiteBtn.addEventListener("click", addNewSite);
 
-/** 删除站点 */
+// 删除站点仅临时缓存
 function deleteSite(siteId) {
-    const target = onlineConfig.domainConfig.find(s => s.id === siteId);
-    if (!target) return;
-    if (!confirm(`确定删除站点【${target.name}】？`)) return;
-    onlineConfig.domainConfig = onlineConfig.domainConfig.filter(item => item.id !== siteId);
-    // 如果删除的是当前选中站点，清空选中并重置倒计时
-    if (currentSite && currentSite.id === siteId) {
-        currentSite = null;
-    }
-    saveLocalConfig();
-    renderAll();
+    const t = tempConfig.domainConfig.find(s => s.id === siteId);
+    if (!t) return;
+    if (!confirm(`删除站点【${t.name}】？`)) return;
+    tempConfig.domainConfig = tempConfig.domainConfig.filter(i => i.id !== siteId);
+    renderAdminDomainList();
+    alert("删除已缓存，点击【保存配置】永久生效");
 }
 
-/** 打开编辑弹窗，回填数据 */
 function openEditModal(site) {
     editSiteId.value = site.id;
     editNameInput.value = site.name;
     editUrlInput.value = site.url;
+    editWeightInput.value = Number(site.weight || 1);
     editOpenCheck.checked = site.open;
     editModal.style.display = "flex";
 }
 modalCancel.addEventListener("click", () => editModal.style.display = "none");
 
-/** 保存编辑站点 —— 核心修复：同步更新currentSite，解决倒计时不跳转 */
+// 编辑站点保存到临时缓存
 function saveEditSite() {
     const sid = editSiteId.value;
     const name = editNameInput.value.trim();
     const url = editUrlInput.value.trim();
+    const weight = Number(editWeightInput.value) || 10;
     const open = editOpenCheck.checked;
-    if (!name || !url) return alert("站点名称、链接不能为空");
-    if (!isValidUrl(url)) return alert("链接格式错误，必须以 http:// 或 https:// 开头");
-    if (isUrlDuplicate(url, sid)) return alert("该域名已被其他站点使用");
-
-    const item = onlineConfig.domainConfig.find(s => s.id === sid);
+    if (!name || !url) return alert("名称、链接不能为空");
+    if (!isValidUrl(url)) return alert("链接必须 http/https 开头");
+    if (isUrlDuplicate(url, sid)) return alert("域名已被其他站点占用");
+    const item = tempConfig.domainConfig.find(s => s.id === sid);
     if (!item) return;
-    // 更新站点数据
     item.name = name;
     item.url = url;
+    item.weight = weight;
     item.open = open;
-    saveLocalConfig();
     editModal.style.display = "none";
-
-    // 关键修复：如果当前编辑的站点是正在倒计时的站点，强制刷新选中对象
-    if (currentSite && currentSite.id === sid) {
-        selectSite(sid);
-    }
-    renderAll();
-    alert("站点修改完成，倒计时已同步更新链接");
+    renderAdminDomainList();
+    alert("修改已缓存，点击【保存配置】永久生效");
 }
 modalSave.addEventListener("click", saveEditSite);
 
-// -------------------------- 页面站点渲染与倒计时 --------------------------
-/** 渲染首页站点列表 */
+// 站点开放/关闭切换仅更新临时缓存
+document.addEventListener("change", (e) => {
+    const radio = e.target;
+    if (radio.name?.startsWith("stat_")) {
+        const siteId = radio.name.replace("stat_", "");
+        const site = tempConfig.domainConfig.find(s => s.id === siteId);
+        if (site) site.open = radio.value === "1";
+    }
+});
+
+function selectSite(siteId) {
+    const t = onlineConfig.domainConfig.find(s => s.id === siteId);
+    if (!t) return;
+    currentSite = t;
+    onlineConfig.lastSelectSiteId = siteId;
+    tempConfig.lastSelectSiteId = siteId;
+    saveLocalConfig();
+    updateCanonical();
+    updateJumpBtnStatus();
+    resetCountdown();
+    renderHomeDomainList();
+}
+
+function updateJumpBtnStatus() {
+    jumpBtn.disabled = !(currentSite && currentSite.open);
+}
+function getJumpUrl() {
+    return currentSite.url + params;
+}
+function updateCanonical() {
+    canonicalTag.href = currentSite ? getJumpUrl() : "";
+}
+function goJump() {
+    if (!currentSite || !currentSite.open) {
+        alert("站点未开放，无法自动跳转");
+        return;
+    }
+    clearInterval(timer);
+    const u = getJumpUrl();
+    if (onlineConfig.openNewTab) window.open(u, "_blank");
+    else location.href = u;
+}
+jumpBtn.addEventListener("click", goJump);
+
+function resetCountdown() {
+    clearInterval(timer);
+    isPause = false;
+    modalOpenPauseFlag = false;
+    pauseBtn.innerText = "暂停倒计时";
+    count = Number(onlineConfig.waitSecond);
+    countDom.innerText = count;
+    barDom.style.width = "0%";
+    circleLoader.classList.remove("paused");
+    startTimer();
+}
+function startTimer() {
+    timer = setInterval(() => {
+        if (!currentSite || !currentSite.open || isPause) return;
+        count--;
+        countDom.innerText = count;
+        const total = onlineConfig.waitSecond;
+        const pct = ((total - count) / total) * 100;
+        barDom.style.width = pct + "%";
+        if (count <= 0) {
+            clearInterval(timer);
+            goJump();
+        }
+    }, 1000);
+}
+pauseBtn.addEventListener("click", () => {
+    if (modalOpenPauseFlag) return;
+    isPause = !isPause;
+    pauseBtn.innerText = isPause ? "恢复倒计时" : "暂停倒计时";
+    circleLoader.classList.toggle("paused", isPause);
+});
+
 function renderHomeDomainList() {
     homeDomainWrap.innerHTML = "";
-    const list = onlineConfig.domainConfig;
+    let list = [...onlineConfig.domainConfig];
+    list.sort((a, b) => Number(a.weight || 1) - Number(b.weight || 10));
     if (list.length === 0) {
         homeDomainWrap.innerHTML = `<div class="domain-empty">暂无站点，请登录管理员添加</div>`;
         currentSite = null;
@@ -950,30 +1166,31 @@ function renderHomeDomainList() {
     })
 }
 
-/** 渲染管理员站点列表 */
 function renderAdminDomainList() {
     adminDomainWrap.innerHTML = "";
-    if (!isAdminLogin || onlineConfig.domainConfig.length === 0) return;
+    if (!isAdminLogin || tempConfig.domainConfig.length === 0) return;
     const title = document.createElement("div");
     title.className = "admin-domain-title";
-    title.innerText = "已添加站点（点击编辑/删除）";
+    title.innerText = "站点列表（权重数字越小，排队越靠前、自动优先跳转）";
     adminDomainWrap.appendChild(title);
-    onlineConfig.domainConfig.forEach(site => {
+    let list = [...tempConfig.domainConfig];
+    list.sort((a,b)=>Number(a.weight||10)-Number(b.weight||10));
+    list.forEach(site => {
         const item = document.createElement("div");
         item.className = "admin-domain-item";
         item.dataset.id = site.id;
         item.innerHTML = `
             <div class="admin-domain-info">
-                <div class="domain-name">${site.name}</div>
+                <div class="domain-name">${site.name} | 排队序号权重:${site.weight || 1}</div>
                 <div class="domain-url">${site.url}</div>
             </div>
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
                 <div class="status-radio-group">
                     <label class="radio-open">
-                        <input type="radio" name="stat_${site.id}" value="1" ${site.open ? "checked" : ""}>开放
+                        <input type="radio" name="stat_${site.id}" value="1" ${site.open?"checked":""}>开放
                     </label>
                     <label class="radio-close">
-                        <input type="radio" name="stat_${site.id}" value="0" ${!site.open ? "checked" : ""}>关闭
+                        <input type="radio" name="stat_${site.id}" value="0" ${!site.open?"checked":""}>关闭
                     </label>
                 </div>
                 <div class="domain-op-btn-group">
@@ -984,130 +1201,27 @@ function renderAdminDomainList() {
         `;
         adminDomainWrap.appendChild(item);
         const radios = item.querySelectorAll(`input[name="stat_${site.id}"]`);
-        radios.forEach(r => {
-            r.onchange = () => {
-                site.open = r.value === "1";
-                saveLocalConfig();
-                // 若当前选中此站点，同步更新开放状态
-                if (currentSite && currentSite.id === site.id) {
-                    selectSite(site.id);
-                }
-            }
-        })
-        const editBtn = item.querySelector(".edit-site-btn");
-        editBtn.onclick = () => openEditModal(site);
-        const delBtn = item.querySelector(".del-site-btn");
-        delBtn.onclick = () => deleteSite(site.id);
+        radios.forEach(r=>{
+            r.onchange = null;
+        });
+        item.querySelector(".edit-site-btn").onclick = ()=>openEditModal(site);
+        item.querySelector(".del-site-btn").onclick = ()=>deleteSite(site.id);
     })
 }
 
-/** 切换选中站点，重置倒计时 */
-function selectSite(siteId) {
-    const target = onlineConfig.domainConfig.find(s => s.id === siteId);
-    if (!target) return;
-    currentSite = target;
-    updateCanonical();
-    updateJumpBtnStatus();
-    resetCountdown();
-    renderHomeDomainList();
-}
-
-/** 立即访问按钮可用性控制 */
-function updateJumpBtnStatus() {
-    jumpBtn.disabled = !(currentSite && currentSite.open);
-}
-
-/** 更新页面canonical链接 */
-function updateCanonical() {
-    canonicalTag.href = currentSite ? getJumpUrl() : "";
-}
-
-/** 获取跳转完整链接 */
-function getJumpUrl() {
-    return currentSite.url + params;
-}
-
-/** 倒计时结束跳转逻辑 */
-function goJump() {
-    if (!currentSite || !currentSite.open) {
-        alert("当前站点未开放，无法自动跳转");
-        return;
-    }
-    clearInterval(timer);
-    const url = getJumpUrl();
-    if (onlineConfig.openNewTab) {
-        window.open(url, "_blank");
-    } else {
-        location.href = url;
-    }
-}
-jumpBtn.addEventListener("click", goJump);
-
-/** 重置倒计时，清空计时并重启 */
-function resetCountdown() {
-    clearInterval(timer);
-    isPause = false;
-    modalOpenPauseFlag = false;
-    pauseBtn.innerText = "暂停倒计时";
-    count = Number(onlineConfig.waitSecond);
-    countDom.innerText = count;
-    barDom.style.width = "0%";
-    circleLoader.classList.remove("paused");
-    startTimer();
-}
-
-/** 启动倒计时定时器 */
-function startTimer() {
-    timer = setInterval(() => {
-        // 无站点、站点关闭、暂停状态均停止计时
-        if (!currentSite || !currentSite.open || isPause) return;
-        count--;
-        countDom.innerText = count;
-        const total = onlineConfig.waitSecond;
-        const percent = ((total - count) / total) * 100;
-        barDom.style.width = percent + "%";
-        if (count <= 0) {
-            clearInterval(timer);
-            goJump();
-        }
-    }, 1000);
-}
-
-/** 手动暂停/恢复倒计时（弹窗自动暂停期间禁止操作） */
-pauseBtn.addEventListener("click", () => {
-    if (modalOpenPauseFlag) return;
-    isPause = !isPause;
-    if (isPause) {
-        pauseBtn.innerText = "恢复倒计时";
-        circleLoader.classList.add("paused");
-    } else {
-        pauseBtn.innerText = "暂停倒计时";
-        circleLoader.classList.remove("paused");
-    }
-});
-
-/** 全局统一渲染入口 */
 function renderAll() {
     waitSecondInput.value = onlineConfig.waitSecond;
     globalNewTabSwitch.checked = onlineConfig.openNewTab;
-    // 登录区域切换
-    if (isAdminLogin) {
-        loginArea.style.display = "none";
-        editArea.style.display = "block";
-    } else {
-        loginArea.style.display = "block";
-        editArea.style.display = "none";
-    }
+    repoUrlInput.value = onlineConfig.repoUrl || "";
+    loginArea.style.display = isAdminLogin ? "none" : "block";
+    editArea.style.display = isAdminLogin ? "block" : "none";
     renderHomeDomainList();
     renderAdminDomainList();
     updateJumpBtnStatus();
-    resetCountdown();
 }
 
-// 页面初始化加载
 window.addEventListener("load", loadOnlineConfig);
-window.addEventListener("offline", () => alert("网络已断开"));
+window.addEventListener("offline", ()=>alert("网络断开"));
 if (document.referrer) sourceTip.innerText = "来路页面：" + document.referrer;
 </script>
 </body>
-</html>
