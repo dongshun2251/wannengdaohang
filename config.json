@@ -1,8 +1,8 @@
 {
-  "waitSecond": 10,
+  "waitSecond": 5,
   "openNewTab": true,
   "theme": "",
-  "lastSelectSiteId": "site_1782238468603_1qkz1p469do",
+  "lastSelectSiteId": "site_1782269477516_fd1imsduod",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "admin123",
   "domainConfig": [
@@ -10,6 +10,13 @@
       "id": "site_1782269477516_fd1imsduod",
       "name": "阿杰的资源站",
       "url": "http://aa54339.r38.cpolar.top",
+      "weight": 1,
+      "open": false
+    },
+    {
+      "id": "site_1782278276277_qnwk49cc6ro",
+      "name": "餐食选配网站",
+      "url": "https://1404fa00.r38.cpolar.top",
       "weight": 1,
       "open": true
     }
