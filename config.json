@@ -1,6 +1,6 @@
 {
   "waitSecond": 5,
-  "openNewTab": true,
+  "openNewTab": false,
   "theme": "",
   "lastSelectSiteId": "site_1782278276277_qnwk49cc6ro",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
