@@ -2,7 +2,7 @@
   "waitSecond": 5,
   "openNewTab": true,
   "theme": "",
-  "lastSelectSiteId": "site_1782269477516_fd1imsduod",
+  "lastSelectSiteId": "site_1782278276277_qnwk49cc6ro",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "admin123",
   "domainConfig": [
@@ -15,8 +15,8 @@
     },
     {
       "id": "site_1782278276277_qnwk49cc6ro",
-      "name": "餐食选配网站",
-      "url": "https://1404fa00.r38.cpolar.top",
+      "name": "美食小厨",
+      "url": "https://1404fa00.r38.cpolar.top/admin",
       "weight": 1,
       "open": true
     }
