@@ -7,16 +7,9 @@
   "adminPwd": "admin123",
   "domainConfig": [
     {
-      "id": "site_1782269477516_fd1imsduod",
-      "name": "阿杰的资源站",
-      "url": "http://aa54339.r38.cpolar.top",
-      "weight": 1,
-      "open": false
-    },
-    {
-      "id": "site_1782278276277_qnwk49cc6ro",
-      "name": "美食小厨",
-      "url": "https://434d9e1a.r38.cpolar.top",
+      "id": "site_1782604604767_bxfkkiwnjss",
+      "name": "聚会云游",
+      "url": "https://3ec6217.r16.vip.cpolar.cn",
       "weight": 1,
       "open": true
     }
