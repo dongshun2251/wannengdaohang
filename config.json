@@ -2,23 +2,23 @@
   "waitSecond": 5,
   "openNewTab": false,
   "theme": "",
-  "lastSelectSiteId": "site_1782604604767_bxfkkiwnjss",
+  "lastSelectSiteId": "site_1782620115080_3pmcxyaq05p",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "admin123",
   "domainConfig": [
     {
       "id": "site_1782604604767_bxfkkiwnjss",
-      "name": "聚会云游",
-      "url": "https://3ec6217.r16.vip.cpolar.cn",
-      "weight": 2,
-      "open": false
+      "name": "聚云游",
+      "url": "https://42bf982.r38.cpolar.top",
+      "weight": 1,
+      "open": true
     },
     {
       "id": "site_1782620115080_3pmcxyaq05p",
       "name": "美味小厨",
       "url": "https://6f47c1f.r38.cpolar.top",
       "weight": 1,
-      "open": true
+      "open": false
     }
   ]
 }
