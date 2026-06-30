@@ -2,7 +2,7 @@
   "waitSecond": 5,
   "openNewTab": false,
   "theme": "",
-  "lastSelectSiteId": "site_1782620115080_3pmcxyaq05p",
+  "lastSelectSiteId": "site_1782604604767_bxfkkiwnjss",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "admin123",
   "domainConfig": [
@@ -16,9 +16,9 @@
     {
       "id": "site_1782620115080_3pmcxyaq05p",
       "name": "美味小厨",
-      "url": "https://6f47c1f.r38.cpolar.top",
+      "url": "https://bbbd711.r7.cpolar.cn",
       "weight": 1,
-      "open": false
+      "open": true
     }
   ]
 }
