@@ -1,10 +1,10 @@
 {
-  "waitSecond": 5,
-  "openNewTab": false,
+  "waitSecond": 1,
+  "openNewTab": true,
   "theme": "",
   "lastSelectSiteId": "site_1782604604767_bxfkkiwnjss",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
-  "adminPwd": "2251768498",
+  "adminPwd": "admin123",
   "domainConfig": [
     {
       "id": "site_1782604604767_bxfkkiwnjss",
@@ -18,7 +18,14 @@
       "name": "美味小厨",
       "url": "https://bbbd711.r7.cpolar.cn",
       "weight": 1,
-      "open": true
+      "open": false
+    },
+    {
+      "id": "site_1782942208950_s0f4e02p9c",
+      "name": "GatherHub游戏平台",
+      "url": "https://20c3a161.r38.cpolar.top",
+      "weight": 1,
+      "open": false
     }
   ]
 }
