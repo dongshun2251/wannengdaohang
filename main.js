@@ -145,6 +145,11 @@ async function loadOnlineConfig() {
     if (isAdminLogin) showAdminUI();
     updateJsonPreview(); updateEditsBadge();
     switchTab(currentTab);
+    // 初始化：未登录隐藏JSON预览标签
+    const jsonTabBtn = document.querySelector('.tab-btn[data-tab="json"]');
+    if(jsonTabBtn){
+        jsonTabBtn.style.display = isAdminLogin ? "flex" : "none";
+    }
 }
 
 
@@ -186,6 +191,9 @@ function showAdminUI() {
     tempConfig = deepClone(onlineConfig);
     syncFormFromTemp(); renderAdminDomainList(); renderEmbList(); updateJsonPreview(); updateEditsBadge();
     renderEmbeddedFrames();
+    // 登录后显示JSON预览Tab按钮
+    const jsonTabBtn = document.querySelector('.tab-btn[data-tab="json"]');
+    if(jsonTabBtn) jsonTabBtn.style.display = "flex";
 }
 
 function logoutAdmin() {
@@ -194,6 +202,10 @@ function logoutAdmin() {
     DOM.configContent.style.display = "none"; DOM.configLoginHint.style.display = "block";
     DOM.embeddedSection.style.display = "none";
     DOM.adminPwdInput.value = ""; showToast("已登出", "info"); updateEditsBadge();
+    // 退出登录隐藏JSON预览，切回跳转台
+    const jsonTabBtn = document.querySelector('.tab-btn[data-tab="json"]');
+    if(jsonTabBtn) jsonTabBtn.style.display = "none";
+    switchTab("jump");
 }
 DOM.logoutBtn.addEventListener("click", logoutAdmin);
 
