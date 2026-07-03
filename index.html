@@ -1,152 +1,150 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网站中转站</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <link rel="canonical" href="">
-    <!-- 引入外部样式表 -->
-    <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网站中转站</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
-    <div class="jump-card">
-        <button class="theme-switch-btn" id="themeSwitchBtn">切换主题</button>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ====== 顶部 ====== -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="logo">&#9672;</span>
+      <span class="brand">网站中转站</span>
+    </div>
+    <div class="header-right">
+      <span class="source-tip" id="sourceTip"></span>
+      <button class="icon-btn" id="themeSwitchBtn" title="切换主题">&#9789;</button>
+    </div>
+  </header>
+
+  <!-- ====== Tab 导航 ====== -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="jump"><span class="tab-icon">&#10148;</span><span class="tab-text">跳转台</span></button>
+    <button class="tab-btn" data-tab="sites"><span class="tab-icon">&#127760;</span><span class="tab-text">站点管理</span></button>
+    <button class="tab-btn" data-tab="config"><span class="tab-icon">&#9881;</span><span class="tab-text">系统配置</span></button>
+    <button class="tab-btn" data-tab="json"><span class="tab-icon">&#128196;</span><span class="tab-text">JSON 预览</span></button>
+  </nav>
+
+  <!-- ====== Tab 内容区 ====== -->
+  <div class="tab-body">
+
+    <!-- Tab 1: 跳转台 -->
+    <div class="tab-panel active" id="panel-jump">
+      <div class="jump-hero">
         <div class="loader" id="circleLoader"></div>
         <h1>即将跳转至目标站点</h1>
-        <p class="desc-text">页面将在 <span id="count-num"></span> 秒后自动跳转</p>
-        <div class="progress-box">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
-        <div class="domain-list-box">
-            <label>选择目标站点</label>
-            <div id="homeDomainWrap"></div>
-        </div>
+        <p class="subtitle">页面将在 <span class="count-num" id="count-num">10</span> 秒后自动跳转</p>
+        <div class="progress-box"><div class="progress-bar" id="progress-bar"></div></div>
+      </div>
+      <div class="panel-section">
+        <h3 class="section-title">选择目标站点</h3>
+        <div id="homeDomainWrap" class="site-list"></div>
         <div class="btn-row">
-            <button class="btn-pause" id="pauseBtn">暂停倒计时</button>
-            <button class="btn-main" id="jumpBtn">立即访问</button>
+          <button class="btn btn-secondary" id="pauseBtn">暂停倒计时</button>
+          <button class="btn btn-primary" id="jumpBtn">立即访问</button>
         </div>
-        <div class="source-tip" id="sourceTip"></div>
-        <button class="toggle-admin" id="openAdminBtn">管理员配置面板</button>
+      </div>
     </div>
 
-    <!-- 管理员弹窗 -->
-    <div class="admin-modal-mask" id="adminModalMask">
-        <div class="admin-modal-box" id="adminModalBox">
-            <button class="admin-modal-close" id="adminModalClose">×</button>
-            <h2 class="admin-title">管理员配置</h2>
-            <div id="loginArea">
-                <div class="form-item">
-                    <label>管理员密码</label>
-                    <input type="password" id="adminPwdInput" placeholder="输入管理员密码登录">
-                </div>
-                <div class="admin-buttons">
-                    <button class="admin-btn btn-login" id="loginBtn">登录</button>
-                </div>
-            </div>
-            <div id="editArea" style="display:none;">
-                <div class="form-item">
-                    <label>本地临时修改密码（仅当前页面内存生效，不会导出/保存）</label>
-                    <input type="password" id="newPwdInput" placeholder="新管理员密码">
-                </div>
-                <div class="form-item">
-                    <label>自动跳转倒计时(秒)</label>
-                    <input type="number" id="waitSecondInput" min="1" max="60">
-                </div>
-                <div class="admin-check-item">
-                    <input type="checkbox" id="globalNewTabSwitch">
-                    <label>默认新标签打开站点</label>
-                </div>
-                <h3 class="admin-sub-title">新增站点（仅本机临时）</h3>
-                <div class="form-item">
-                    <label>站点名称</label>
-                    <input id="siteNameInput" placeholder="例如：主站点">
-                </div>
-                <div class="form-item">
-                    <label>站点URL（必须带 http:// 或 https://）</label>
-                    <input id="siteUrlInput" placeholder="https://xxx.com">
-                </div>
-                <div class="form-item">
-                    <label>站点权重（数字越小优先级越高，排队序号逻辑，默认1）</label>
-                    <input type="number" id="siteWeightInput" value="1" min="0">
-                </div>
-
-                <p class="admin-warn-tip">⚠️ 新增/编辑/开关站点仅临时缓存，点击【保存配置】才会永久生效，导出复制JSON同步至仓库</p>
-                <div class="admin-domain-wrap" id="adminDomainWrap"></div>
-
-                <div class="repo-wrap">
-                    <label class="repo-label">仓库配置地址</label>
-                    <div class="repo-url-row">
-                        <input id="repoUrlInput" placeholder="仓库配置编辑地址">
-                        <button class="admin-btn btn-sync-url" id="syncRepoUrlBtn">同步地址</button>
-                    </div>
-                </div>
-
-                <!-- 操作流程提示 -->
-                <p class="admin-step-tip">
-操作流程顺序：<br>
-1、填写站点名称、URL、权重 → 点击【添加站点】；<br>
-2、确认上方站点列表内容无误 → 点击【保存配置】；<br>
-3、直接点击【导出.json文件】复制完整配置；<br>
-4、打开仓库 config.json 粘贴覆盖原有内容，提交后全设备同步。
-                </p>
-
-                <div class="admin-buttons">
-                    <button class="admin-btn btn-save-main" id="saveConfigBtn">保存配置</button>
-                    <button class="admin-btn btn-add" id="addSiteBtn">添加站点</button>
-                    <button class="admin-btn btn-logout" id="logoutBtn">登出账号</button>
-                    <button class="admin-btn btn-export-file" id="exportOnlineConfigBtn">导出.json文件</button>
-                </div>
-            </div>
+    <!-- Tab 2: 站点管理 -->
+    <div class="tab-panel" id="panel-sites">
+      <div class="panel-section" id="loginSection">
+        <div class="login-box">
+          <h2>&#128274; 管理员登录</h2>
+          <div class="form-row"><input type="password" id="adminPwdInput" placeholder="输入管理员密码" class="input"></div>
+          <button class="btn btn-primary btn-full" id="loginBtn">登录</button>
         </div>
+      </div>
+      <div id="sitesContent" style="display:none;">
+        <div class="panel-section">
+          <h3 class="section-title">&#10010; 新增站点</h3>
+          <div class="form-grid">
+            <div class="form-row"><input id="siteNameInput" placeholder="站点名称" class="input"></div>
+            <div class="form-row"><input id="siteUrlInput" placeholder="https://example.com" class="input"></div>
+            <div class="form-row"><input type="number" id="siteWeightInput" value="1" min="0" class="input input-sm" style="max-width:120px"><button class="btn btn-accent btn-sm" id="addSiteBtn">添加</button></div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <h3 class="section-title">&#127760; 站点列表</h3>
+          <div id="adminDomainWrap" class="admin-site-list"></div>
+        </div>
+        <div class="panel-section" id="editSection" style="display:none;">
+          <h3 class="section-title">&#9998; 编辑站点 <button class="icon-btn btn-close" id="editCloseBtn">&times;</button></h3>
+          <input type="hidden" id="editSiteId">
+          <div class="form-grid">
+            <div class="form-row"><input id="editNameInput" placeholder="站点名称" class="input"></div>
+            <div class="form-row"><input id="editUrlInput" placeholder="https://example.com" class="input"></div>
+            <div class="form-row"><input type="number" id="editWeightInput" min="0" class="input input-sm" style="max-width:120px" placeholder="权重"></div>
+            <div class="form-row"><label class="toggle-label"><input type="checkbox" id="editOpenCheck"><span class="toggle-track"></span><span>站点已开放</span></label></div>
+            <div class="form-row"><button class="btn btn-primary btn-sm" id="editSaveBtn">确认修改</button></div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <h3 class="section-title">&#128196; 添加内嵌网页</h3>
+          <div class="form-grid">
+            <div class="form-row"><input id="embNameInput" placeholder="名称" class="input" style="max-width:160px"><input id="embUrlInput" placeholder="https://xxx.com" class="input"><button class="btn btn-accent btn-sm" id="addEmbBtn">添加</button></div>
+          </div>
+          <div id="embWrap" class="emb-list"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 编辑站点弹窗 -->
-    <div class="modal-mask" id="editModal">
-        <div class="modal-box">
-            <h3 class="modal-title">编辑站点（仅本机临时）</h3>
-            <input type="hidden" id="editSiteId">
-            <div class="form-item">
-                <label>站点名称</label>
-                <input id="editNameInput">
+    <!-- Tab 3: 系统配置 -->
+    <div class="tab-panel" id="panel-config">
+      <div class="panel-section" id="configContent" style="display:none;">
+        <div class="config-grid">
+          <div class="config-card">
+            <h3 class="section-title">&#9881; 基础配置</h3>
+            <div class="form-grid">
+              <div class="form-item"><label class="field-label">管理员密码</label><input type="password" id="newPwdInput" placeholder="修改密码" class="input"></div>
+              <div class="form-item"><label class="field-label">倒计时(秒)</label><input type="number" id="waitSecondInput" min="1" max="60" class="input"></div>
+              <div class="form-item"><label class="toggle-label"><input type="checkbox" id="globalNewTabSwitch"><span class="toggle-track"></span><span>新标签打开</span></label></div>
             </div>
-            <div class="form-item">
-                <label>站点URL（必须带 http:// 或 https://）</label>
-                <input id="editUrlInput">
+          </div>
+          <div class="config-card">
+            <h3 class="section-title">&#128196; 操作</h3>
+            <div class="btn-stack">
+              <button class="btn btn-primary btn-full" id="addSaveExportBtn">一键保存并导出</button>
+              <button class="btn btn-danger btn-full" id="logoutBtn">登出管理员</button>
             </div>
-            <div class="form-item">
-                <label>站点权重（数字越小优先级越高，排队序号逻辑）</label>
-                <input type="number" id="editWeightInput" min="0">
-            </div>
-            <div class="admin-check-item">
-                <input type="checkbox" id="editOpenCheck">
-                <label>站点已开放</label>
-            </div>
-            <div class="modal-btns">
-                <button class="modal-btn modal-cancel" id="modalCancel">取消</button>
-                <button class="modal-btn modal-confirm" id="modalSave">确认修改</button>
-            </div>
+          </div>
         </div>
+      </div>
+      <!-- 内嵌网页预览（系统配置内，仅管理员可见） -->
+      <section class="embedded-section" id="embeddedSection" style="display:none;">
+        <div class="emb-tabs" id="embTabs"></div>
+        <div class="emb-frame-wrap" id="embFrameWrap"></div>
+      </section>
+      <div class="panel-section" id="configLoginHint" style="display:none;">
+        <div class="empty-state">
+          <p>请先在「站点管理」Tab 中登录管理员</p>
+        </div>
+      </div>
     </div>
 
-    <!-- 导出成功提示弹窗 -->
-    <div class="modal-mask" id="tipModal">
-        <div class="modal-box">
-            <h3 class="modal-title">操作完成</h3>
-            <p style="color:#fff;line-height:1.8;text-align:center;">
-                完整配置JSON已复制到剪贴板（无文件下载）<br>
-                内容包含：倒计时、新标签、主题、上次选中ID、仓库地址、全部站点、管理员登录密码<br>
-                复制后打开仓库config.json，全选原有内容粘贴覆盖，提交即可全设备同步
-            </p>
-            <div class="modal-btns" style="margin-top:20px;">
-                <button class="modal-btn modal-confirm" id="closeTipBtn">知道了</button>
-            </div>
+    <!-- Tab 4: JSON 预览 -->
+    <div class="tab-panel" id="panel-json">
+      <div class="panel-section">
+        <div class="json-header">
+          <h3 class="section-title">完整配置 JSON <span id="editsBadge" style="display:none;" class="edits-badge">有未导出的修改</span></h3>
+          <button class="btn btn-accent btn-sm" id="addSaveExportBtn2">一键保存并导出</button>
         </div>
+        <div class="json-box">
+          <pre class="json-preview" id="jsonPreview"></pre>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- 引入外部脚本 -->
-    <script src="./main.js"></script>
+  <script src="main.js?v=7"></script>
 </body>
 </html>
