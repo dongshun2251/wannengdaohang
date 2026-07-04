@@ -155,11 +155,70 @@ body{min-height:100dvh;background:linear-gradient(160deg,#0a0e18,#121a2c);color:
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .config-card{background:var(--card-bg);backdrop-filter:blur(12px);border-radius:var(--r);border:1px solid var(--border);padding:20px}
 
-/* ====== 内嵌网页管理 ====== */
-.emb-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--rs);background:rgba(255,255,255,.04);border:1px solid var(--border);margin-top:8px;transition:var(--tr)}
-.emb-item:hover{background:rgba(255,255,255,.07)}
-.emb-item-name{color:var(--white);font-size:13px;font-weight:500;flex-shrink:0}
-.emb-item-url{color:#7a8fa3;font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ====== 仓库列表 修复版 不撑高盒子、名称单行、地址单行渐变截断 ====== */
+.emb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--rs);
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    margin-top: 8px;
+    transition: var(--tr);
+    flex-wrap: nowrap; /* 整行强制不换行 */
+    min-height: 48px; /* 固定最小高度，不会被文字撑高 */
+    overflow: hidden;
+}
+.emb-item:hover {
+    background: rgba(255,255,255,.07);
+}
+/* 仓库名称：固定最大宽度，超长省略，禁止竖排换行 */
+.emb-name {
+    flex: 0 0 90px; /* 固定宽度，不会挤压/撑开 */
+    max-width: 90px;
+    color: var(--white);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap; /* 名称强制单行，解决“我的仓库”竖排 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* 地址外层弹性容器，允许压缩 */
+.emb-url-wrap {
+    flex: 1;
+    min-width: 0; /* 关键：允许容器压缩，不撑宽页面 */
+    position: relative;
+}
+/* 地址单行、渐变遮罩 */
+.emb-url {
+    display: block;
+    width: 100%;
+    color: #7a8fa3;
+    font-size: 11px;
+    white-space: nowrap; /* 地址禁止换行 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* 右侧渐变消失遮罩，贴合卡片背景 */
+.emb-url-wrap::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 50px;
+    height: 100%;
+    background: linear-gradient(to left, #161c2a, transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+/* 删除按钮固定右侧，层级高于渐变 */
+.emb-item .btn-danger {
+    flex: 0 0 auto;
+    z-index: 2;
+    white-space: nowrap;
+}
+
 
 /* ====== JSON 预览 ====== */
 .json-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
