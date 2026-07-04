@@ -1,13 +1,29 @@
 /* ================================================================
    网站中转站 - Tab 选项卡版
-   ================================================================ */
-
+   修复点：
+   1. 仅跳转台页面倒计时运行，其余页面切换立刻暂停，保存不启动倒计时
+   2. 一键保存复制JSON，自动读取仓库列表第一条地址新开标签打开（不再读取输入框）
+   3. 彻底移除iframe仓库预览，只保留仓库增删列表
+   4. 无JSON文件下载，仅复制剪贴板
+   5. 仓库列表DOM结构重构，适配CSS单行截断，名称不会竖排、卡片不会异常增高
+   6. 修复切换站点管理Tab/登录后仓库不渲染问题
+   7. 修复旧配置缺失embeddedPages字段导致仓库无法保存加载
+================================================================ */
 const STORAGE_KEY = "jump_config";
 const LOGIN_STORAGE_KEY = "admin_is_login";
-const HAS_EDITS_KEY = "jump_has_edits";
+const HAS_EDIT_STORAGE_KEY = "jump_has_edit";
 const THEME_LIST = ["", "purple", "mint", "coral", "deepblue", "pink"];
 const CONFIG_KEYS = ["waitSecond", "openNewTab", "theme", "lastSelectSiteId", "repoUrl", "adminPwd", "domainConfig", "embeddedPages"];
-const DEFAULT_CONFIG = { waitSecond: 10, openNewTab: true, theme: "", lastSelectSiteId: "", repoUrl: "", adminPwd: "admin123", domainConfig: [], embeddedPages: [] };
+const DEFAULT_CONFIG = {
+    waitSecond: 10,
+    openNewTab: true,
+    theme: "",
+    lastSelectSiteId: "",
+    repoUrl: "",
+    adminPwd: "admin123",
+    domainConfig: [],
+    embeddedPages: []
+};
 
 let onlineConfig = { ...DEFAULT_CONFIG, domainConfig: [], embeddedPages: [] };
 let tempConfig = { ...DEFAULT_CONFIG, domainConfig: [], embeddedPages: [] };
@@ -15,521 +31,686 @@ let onlineConfigLoaded = false;
 let timer = null, count = 0, isPause = false, currentSite = null;
 let isAdminLogin = localStorage.getItem(LOGIN_STORAGE_KEY) === "1";
 let adminPassword = DEFAULT_CONFIG.adminPwd;
-let hasLocalEdits = localStorage.getItem(HAS_EDITS_KEY) === "1";
-const params = window.location.search;
+let hasLocalEdit = localStorage.getItem(HAS_EDIT_STORAGE_KEY) === "1";
+const urlParams = window.location.search;
 
 const $ = id => document.getElementById(id);
 const DOM = {
-    toastContainer: $("toastContainer"), themeSwitchBtn: $("themeSwitchBtn"), sourceTip: $("sourceTip"),
-    circleLoader: $("circleLoader"), countDom: $("count-num"), barDom: $("progress-bar"),
-    homeDomainWrap: $("homeDomainWrap"), pauseBtn: $("pauseBtn"), jumpBtn: $("jumpBtn"),
-    loginSection: $("loginSection"), adminPwdInput: $("adminPwdInput"), loginBtn: $("loginBtn"),
-    sitesContent: $("sitesContent"), configContent: $("configContent"), configLoginHint: $("configLoginHint"),
-    newPwdInput: $("newPwdInput"), waitSecondInput: $("waitSecondInput"), globalNewTabSwitch: $("globalNewTabSwitch"),
-    siteNameInput: $("siteNameInput"), siteUrlInput: $("siteUrlInput"), siteWeightInput: $("siteWeightInput"),
-    addSiteBtn: $("addSiteBtn"), adminDomainWrap: $("adminDomainWrap"),
-    editSection: $("editSection"), editCloseBtn: $("editCloseBtn"),
-    editSiteId: $("editSiteId"), editNameInput: $("editNameInput"), editUrlInput: $("editUrlInput"),
-    editWeightInput: $("editWeightInput"), editOpenCheck: $("editOpenCheck"), editSaveBtn: $("editSaveBtn"),
-    embNameInput: $("embNameInput"), embUrlInput: $("embUrlInput"), addEmbBtn: $("addEmbBtn"), embWrap: $("embWrap"),
-    jsonPreview: $("jsonPreview"), editsBadge: $("editsBadge"),
-    addSaveExportBtn: $("addSaveExportBtn"), addSaveExportBtn2: $("addSaveExportBtn2"), logoutBtn: $("logoutBtn"),
-    embeddedSection: $("embeddedSection"), embTabs: $("embTabs"), embFrameWrap: $("embFrameWrap")
+    toastContainer: $("toastContainer"),
+    themeSwitchBtn: $("themeSwitchBtn"),
+    sourceTip: $("sourceTip"),
+    circleLoader: $("circleLoader"),
+    countDom: $("count-num"),
+    progressBar: $("progress-bar"),
+    homeDomainWrap: $("homeDomainWrap"),
+    pauseBtn: $("pauseBtn"),
+    jumpBtn: $("jumpBtn"),
+    loginSection: $("loginSection"),
+    adminPwdInput: $("adminPwdInput"),
+    loginBtn: $("loginBtn"),
+    sitesContent: $("sitesContent"),
+    configContent: $("configContent"),
+    configLoginHint: $("configLoginHint"),
+    newPwdInput: $("newPwdInput"),
+    waitSecondInput: $("waitSecondInput"),
+    globalNewTabSwitch: $("globalNewTabSwitch"),
+    siteNameInput: $("siteNameInput"),
+    siteUrlInput: $("siteUrlInput"),
+    siteWeightInput: $("siteWeightInput"),
+    addSiteBtn: $("addSiteBtn"),
+    adminDomainWrap: $("adminDomainWrap"),
+    editSection: $("editSection"),
+    editCloseBtn: $("editCloseBtn"),
+    editSiteId: $("editSiteId"),
+    editNameInput: $("editNameInput"),
+    editUrlInput: $("editUrlInput"),
+    editWeightInput: $("editWeightInput"),
+    editOpenCheck: $("editOpenCheck"),
+    editSaveBtn: $("editSaveBtn"),
+    embNameInput: $("embNameInput"),
+    embUrlInput: $("embUrlInput"),
+    addEmbBtn: $("addEmbBtn"),
+    embWrap: $("embWrap"),
+    jsonPreview: $("jsonPreview"),
+    editsBadge: $("editsBadge"),
+    addSaveExportBtn: $("addSaveExportBtn"),
+    addSaveExportBtn2: $("addSaveExportBtn2"),
+    logoutBtn: $("logoutBtn"),
+    embeddedSection: $("embeddedSection"),
+    embTabs: $("embTabs"),
+    embFrameWrap: $("embFrameWrap")
 };
 
-// ==================== Tab 切换 ====================
-// 优先读取上次保存的标签，无记录才默认跳转台
+// ==================== Tab切换倒计时控制 ====================
 let currentTab = localStorage.getItem("lastTab") || "jump";
-
-
 function switchTab(tabName) {
     currentTab = tabName;
-    // 保存当前选中标签到本地存储
     localStorage.setItem("lastTab", tabName);
     document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.tab === tabName);
     });
     document.querySelectorAll(".tab-panel").forEach(panel => {
-        panel.classList.toggle("active", panel.id === "panel-" + tabName);
+        panel.classList.toggle("active", panel.id === `panel-${tabName}`);
     });
+    if (tabName === "jump") {
+        resetCountdown();
+    } else {
+        clearInterval(timer);
+    }
+    // 新增：切换站点管理页自动渲染仓库
+    if(tabName === "sites" && isAdminLogin){
+        renderEmbList();
+    }
 }
-
-
 document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
 });
 
-// ==================== 工具 ====================
-function escapeHtml(s) { const m = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }; return String(s).replace(/[&<>"']/g, c => m[c]); }
-function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
-function isValidUrl(u) { return /^https?:\/\/.+/i.test(u.trim()); }
-function isUrlDuplicate(u, ex) { return tempConfig.domainConfig.some(i => i.url === u && i.id !== ex); }
-function genId(p) { return p + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8); }
-function getTopWeightOpenSite() { const l = onlineConfig.domainConfig.filter(s => s.open); if (!l.length) return null; l.sort((a, b) => (Number(a.weight) || 1) - (Number(b.weight) || 1)); return l[0]; }
-
-// ==================== Toast ====================
-function showToast(msg, type = "info", dur = 3000) {
-    if (!DOM.toastContainer) return;
-    const t = document.createElement("div"); t.className = "toast-item toast-" + type; t.textContent = msg;
-    t.addEventListener("click", () => removeToast(t)); DOM.toastContainer.appendChild(t);
-    setTimeout(() => removeToast(t), dur);
+// ==================== 工具函数 ====================
+function escapeHtml(str) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return String(str).replace(/[&<>"']/g, char => map[char]);
 }
-function removeToast(t) { if (!t.parentNode) return; t.classList.add("toast-out"); setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, 250); }
+function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+function validHttpUrl(url) {
+    return /^https?:\/\/.+/.test(url.trim());
+}
+function urlExistInList(url, excludeId = "") {
+    return tempConfig.domainConfig.some(item => item.url === url && item.id !== excludeId);
+}
+function genUniqueId(prefix) {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+function getFirstOpenSite() {
+    const openList = onlineConfig.domainConfig.filter(item => item.open);
+    if (openList.length === 0) return null;
+    openList.sort((a, b) => (Number(a.weight) || 1) - (Number(b.weight) || 1));
+    return openList[0];
+}
+
+// ==================== Toast弹窗 ====================
+function showToast(message, type = "info", duration = 3000) {
+    if (!DOM.toastContainer) return;
+    const toast = document.createElement("div");
+    toast.className = `toast-item toast-${type}`;
+    toast.textContent = message;
+    toast.addEventListener("click", () => removeToast(toast));
+    DOM.toastContainer.appendChild(toast);
+    setTimeout(() => removeToast(toast), duration);
+}
+function removeToast(el) {
+    if (!el.parentNode) return;
+    el.classList.add("toast-out");
+    setTimeout(() => el.remove(), 250);
+}
 
 // ==================== 确认弹窗 ====================
-function showConfirm(title, message) {
+function showConfirm(title, content) {
     return new Promise(resolve => {
-        const o = document.createElement("div"); o.className = "confirm-overlay";
-        o.innerHTML = '<div class="confirm-box"><div class="ct">' + escapeHtml(title) + '</div><div class="cm">' + escapeHtml(message) + '</div><div class="cb"><button class="c-cancel">取消</button><button class="c-ok">确认</button></div></div>';
-        document.body.appendChild(o);
-        const cl = r => { o.remove(); resolve(r); };
-        o.querySelector(".c-cancel").addEventListener("click", () => cl(false));
-        o.querySelector(".c-ok").addEventListener("click", () => cl(true));
-        o.addEventListener("click", e => { if (e.target === o) cl(false); });
-        const kh = e => { if (e.key === "Escape") { cl(false); document.removeEventListener("keydown", kh); } };
-        document.addEventListener("keydown", kh);
+        const mask = document.createElement("div");
+        mask.className = "confirm-overlay";
+        mask.innerHTML = `
+            <div class="confirm-box">
+                <div class="confirm-title">${escapeHtml(title)}</div>
+                <div class="confirm-content">${escapeHtml(content)}</div>
+                <div class="confirm-btn-row">
+                    <button class="btn-cancel">取消</button>
+                    <button class="btn-ok">确认</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(mask);
+        const close = (result) => {
+            mask.remove();
+            resolve(result);
+        };
+        mask.querySelector(".btn-cancel").addEventListener("click", () => close(false));
+        mask.querySelector(".btn-ok").addEventListener("click", () => close(true));
+        mask.addEventListener("click", e => {
+            if (e.target === mask) close(false);
+        });
+        const escHandler = e => {
+            if (e.key === "Escape") {
+                close(false);
+                document.removeEventListener("keydown", escHandler);
+            }
+        };
+        document.addEventListener("keydown", escHandler);
     });
 }
 
-// ==================== 主题 ====================
-function switchTheme() {
-    const i = (THEME_LIST.indexOf(onlineConfig.theme) + 1) % THEME_LIST.length;
-    onlineConfig.theme = THEME_LIST[i]; tempConfig.theme = onlineConfig.theme;
-    saveLocalConfig(); document.documentElement.setAttribute("data-theme", onlineConfig.theme);
-    showToast("主题已切换", "success", 1500); updateJsonPreview();
+// ==================== 主题切换 ====================
+function toggleTheme() {
+    const idx = (THEME_LIST.indexOf(onlineConfig.theme) + 1) % THEME_LIST.length;
+    onlineConfig.theme = THEME_LIST[idx];
+    tempConfig.theme = onlineConfig.theme;
+    saveLocalConfig();
+    document.documentElement.setAttribute("data-theme", onlineConfig.theme);
+    showToast("主题已切换", "success", 1500);
+    updateJsonPreview();
 }
-DOM.themeSwitchBtn.addEventListener("click", switchTheme);
-function applySavedTheme() { document.documentElement.setAttribute("data-theme", onlineConfig.theme || ""); }
+DOM.themeSwitchBtn.addEventListener("click", toggleTheme);
+function applySavedTheme() {
+    document.documentElement.setAttribute("data-theme", onlineConfig.theme || "");
+}
 
-// ==================== 配置存储 ====================
+// ==================== 本地存储读写 ====================
 function saveLocalConfig() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(onlineConfig)); } catch (e) { }
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(onlineConfig));
+    } catch (err) {}
 }
 function loadLocalConfig() {
     try {
-        const r = localStorage.getItem(STORAGE_KEY); if (!r) return;
-        const d = JSON.parse(r); CONFIG_KEYS.forEach(k => { if (d.hasOwnProperty(k)) onlineConfig[k] = d[k]; });
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const cfg = JSON.parse(raw);
+        CONFIG_KEYS.forEach(key => {
+            if (cfg[key] !== undefined) onlineConfig[key] = cfg[key];
+        });
+        // 兜底：旧配置无仓库数组则强制赋值空数组
+        if(!onlineConfig.embeddedPages) onlineConfig.embeddedPages = [];
         adminPassword = onlineConfig.adminPwd;
-    } catch (e) { }
+    } catch (err) {}
 }
 
-// ==================== 自动保存 ====================
-function autoSaveTempConfig() {
+// ==================== 临时配置自动保存 ====================
+function autoSaveTemp() {
     onlineConfig = deepClone(tempConfig);
-    saveLocalConfig(); localStorage.setItem(HAS_EDITS_KEY, "1"); hasLocalEdits = true;
-    renderHomeDomainList(); updateJumpBtnStatus();
-    if (isAdminLogin) renderEmbeddedFrames();
-    updateJsonPreview(); updateEditsBadge();
+    saveLocalConfig();
+    localStorage.setItem(HAS_EDIT_STORAGE_KEY, "1");
+    hasLocalEdit = true;
+    renderHomeDomainList();
+    updateJumpBtnStatus();
+    updateJsonPreview();
+    updateEditBadge();
 }
-function updateEditsBadge() {
-    if (DOM.editsBadge) DOM.editsBadge.style.display = hasLocalEdits && isAdminLogin ? "inline-block" : "none";
+function updateEditBadge() {
+    if (!DOM.editsBadge) return;
+    DOM.editsBadge.style.display = (hasLocalEdit && isAdminLogin) ? "inline-block" : "none";
 }
 
-// ==================== 加载 ====================
-async function loadOnlineConfig() {
+// ==================== 页面初始化加载 ====================
+async function loadAllConfig() {
     loadLocalConfig();
-    hasLocalEdits = localStorage.getItem(HAS_EDITS_KEY) === "1";
-    if (!hasLocalEdits) {
+    hasLocalEdit = localStorage.getItem(HAS_EDIT_STORAGE_KEY) === "1";
+    if (!hasLocalEdit) {
         try {
-            const res = await fetch("config.json?t=" + Date.now());
-            if (!res.ok) throw new Error("404");
-            const rawData = await res.json();
-            const full = { ...DEFAULT_CONFIG, domainConfig: [], embeddedPages: [] };
-            CONFIG_KEYS.forEach(k => { if (rawData.hasOwnProperty(k)) full[k] = rawData[k]; });
-            onlineConfig = full; adminPassword = onlineConfig.adminPwd; saveLocalConfig();
-        } catch (e) { showToast("加载线上配置失败，使用本地缓存", "warning", 4000); }
-    } else { showToast("已恢复上次编辑状态", "info", 2000); }
+            const res = await fetch(`config.json?t=${Date.now()}`);
+            if (!res.ok) throw new Error("no config");
+            const remoteCfg = await res.json();
+            const fullCfg = { ...DEFAULT_CONFIG, domainConfig: [], embeddedPages: [] };
+            CONFIG_KEYS.forEach(k => {
+                if (remoteCfg[k] !== undefined) fullCfg[k] = remoteCfg[k];
+            });
+            onlineConfig = fullCfg;
+            adminPassword = onlineConfig.adminPwd;
+            saveLocalConfig();
+        } catch (err) {
+            showToast("加载线上配置失败，使用本地缓存", "warning", 4000);
+        }
+    } else {
+        showToast("已恢复上次编辑状态", "info", 2000);
+    }
     onlineConfigLoaded = true;
     tempConfig = deepClone(onlineConfig);
-    applySavedTheme(); renderAll(); autoSelectSiteOnLoad(); resetCountdown();
-    if (isAdminLogin) showAdminUI();
-    updateJsonPreview(); updateEditsBadge();
+    applySavedTheme();
+    renderAll();
+    autoSelectDefaultSite();
+    resetCountdown();
+    if (isAdminLogin) renderAdminPanel();
+    updateJsonPreview();
+    updateEditBadge();
     switchTab(currentTab);
-    // 初始化：未登录隐藏JSON预览标签
     const jsonTabBtn = document.querySelector('.tab-btn[data-tab="json"]');
-    if(jsonTabBtn){
-        jsonTabBtn.style.display = isAdminLogin ? "flex" : "none";
-    }
+    if (jsonTabBtn) jsonTabBtn.style.display = isAdminLogin ? "flex" : "none";
+    renderEmbList();
 }
 
-
-// ==================== JSON 预览 ====================
+// ==================== JSON预览刷新 ====================
 function updateJsonPreview() {
     if (!DOM.jsonPreview) return;
     DOM.jsonPreview.textContent = JSON.stringify({
-        waitSecond: tempConfig.waitSecond, openNewTab: tempConfig.openNewTab, theme: tempConfig.theme,
-        lastSelectSiteId: tempConfig.lastSelectSiteId, repoUrl: tempConfig.repoUrl, adminPwd: tempConfig.adminPwd,
-        domainConfig: tempConfig.domainConfig, embeddedPages: tempConfig.embeddedPages
+        waitSecond: tempConfig.waitSecond,
+        openNewTab: tempConfig.openNewTab,
+        theme: tempConfig.theme,
+        lastSelectSiteId: tempConfig.lastSelectSiteId,
+        repoUrl: tempConfig.repoUrl,
+        adminPwd: tempConfig.adminPwd,
+        domainConfig: tempConfig.domainConfig,
+        embeddedPages: tempConfig.embeddedPages
     }, null, 2);
 }
 
-// ==================== 登录/登出 ====================
-async function doLogin() {
+// ==================== 管理员登录登出 ====================
+async function adminLogin() {
     const pwd = DOM.adminPwdInput.value.trim();
-    if (!pwd) return showToast("请输入密码", "warning");
-    let matched = pwd === adminPassword;
-    if (!matched && window.crypto && crypto.subtle) {
+    if (!pwd) return showToast("请输入管理员密码", "warning");
+    let match = pwd === adminPassword;
+    if (!match && window.crypto?.subtle) {
         try {
-            const enc = new TextEncoder();
-            const h1 = await crypto.subtle.digest('SHA-256', enc.encode(pwd));
-            const h2 = await crypto.subtle.digest('SHA-256', enc.encode(adminPassword));
-            const hx = b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
-            matched = hx(h1) === hx(h2);
-        } catch (e) { }
+            const encoder = new TextEncoder();
+            const hash1 = await crypto.subtle.digest("SHA-256", encoder.encode(pwd));
+            const hash2 = await crypto.subtle.digest("SHA-256", encoder.encode(adminPassword));
+            const arr1 = new Uint8Array(hash1);
+            const arr2 = new Uint8Array(hash2);
+            match = arr1.every((v, i) => v === arr2[i]);
+        } catch (err) {}
     }
-    if (matched) { isAdminLogin = true; localStorage.setItem(LOGIN_STORAGE_KEY, "1"); showAdminUI(); showToast("登录成功", "success"); }
-    else showToast("密码错误", "error");
+    if (match) {
+        isAdminLogin = true;
+        localStorage.setItem(LOGIN_STORAGE_KEY, "1");
+        renderAdminPanel();
+        renderEmbList(); // 登录后强制刷新仓库
+        showToast("登录成功", "success");
+    } else {
+        showToast("密码错误", "error");
+    }
 }
-DOM.loginBtn.addEventListener("click", doLogin);
-DOM.adminPwdInput.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+DOM.loginBtn.addEventListener("click", adminLogin);
+DOM.adminPwdInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") adminLogin();
+});
 
-function showAdminUI() {
+function renderAdminPanel() {
     DOM.loginSection.style.display = "none";
     DOM.sitesContent.style.display = "block";
     DOM.configContent.style.display = "block";
     DOM.configLoginHint.style.display = "none";
     tempConfig = deepClone(onlineConfig);
-    syncFormFromTemp(); renderAdminDomainList(); renderEmbList(); updateJsonPreview(); updateEditsBadge();
-    renderEmbeddedFrames();
-    // 登录后显示JSON预览Tab按钮
+    syncConfigToForm();
+    renderAdminDomainList();
+    renderEmbList();
+    updateJsonPreview();
+    updateEditBadge();
     const jsonTabBtn = document.querySelector('.tab-btn[data-tab="json"]');
-    if(jsonTabBtn) jsonTabBtn.style.display = "flex";
+    if (jsonTabBtn) jsonTabBtn.style.display = "flex";
 }
 
-function logoutAdmin() {
-    isAdminLogin = false; localStorage.removeItem(LOGIN_STORAGE_KEY);
-    DOM.loginSection.style.display = ""; DOM.sitesContent.style.display = "none";
-    DOM.configContent.style.display = "none"; DOM.configLoginHint.style.display = "block";
+function adminLogout() {
+    isAdminLogin = false;
+    localStorage.removeItem(LOGIN_STORAGE_KEY);
+    DOM.loginSection.style.display = "";
+    DOM.sitesContent.style.display = "none";
+    DOM.configContent.style.display = "none";
+    DOM.configLoginHint.style.display = "block";
     DOM.embeddedSection.style.display = "none";
-    DOM.adminPwdInput.value = ""; showToast("已登出", "info"); updateEditsBadge();
-    // 退出登录隐藏JSON预览，切回跳转台
+    DOM.adminPwdInput.value = "";
+    showToast("已登出管理员", "info");
+    updateEditBadge();
     const jsonTabBtn = document.querySelector('.tab-btn[data-tab="json"]');
-    if(jsonTabBtn) jsonTabBtn.style.display = "none";
+    if (jsonTabBtn) jsonTabBtn.style.display = "none";
     switchTab("jump");
 }
-DOM.logoutBtn.addEventListener("click", logoutAdmin);
+DOM.logoutBtn.addEventListener("click", adminLogout);
 
-function changePwd() {
-    const p = DOM.newPwdInput.value.trim();
-    if (!p) return showToast("密码不能为空", "warning");
-    tempConfig.adminPwd = p; adminPassword = p; DOM.newPwdInput.value = "";
-    autoSaveTempConfig(); showToast("密码已保存", "success");
+// 修改管理员密码
+function changeAdminPwd() {
+    const newPwd = DOM.newPwdInput.value.trim();
+    if (!newPwd) return showToast("密码不能为空", "warning");
+    tempConfig.adminPwd = newPwd;
+    adminPassword = newPwd;
+    DOM.newPwdInput.value = "";
+    autoSaveTemp();
+    showToast("管理员密码已保存", "success");
 }
-DOM.newPwdInput.addEventListener("keydown", e => { if (e.key === "Enter") changePwd(); });
-function syncFormFromTemp() { DOM.waitSecondInput.value = tempConfig.waitSecond; DOM.globalNewTabSwitch.checked = tempConfig.openNewTab; }
+DOM.newPwdInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") changeAdminPwd();
+});
+function syncConfigToForm() {
+    DOM.waitSecondInput.value = tempConfig.waitSecond;
+    DOM.globalNewTabSwitch.checked = tempConfig.openNewTab;
+}
 
 // ==================== 站点管理 ====================
 function addNewSite() {
-    const n = DOM.siteNameInput.value.trim(), u = DOM.siteUrlInput.value.trim(), w = Number(DOM.siteWeightInput.value) || 1;
-    if (!n || !u) return showToast("请填写名称和链接", "warning");
-    if (!isValidUrl(u)) return showToast("链接需 http:// 或 https://", "error");
-    if (isUrlDuplicate(u)) return showToast("域名已存在", "error");
-    tempConfig.domainConfig.push({ id: genId("site"), name: n, url: u, weight: w, open: false });
-    DOM.siteNameInput.value = ""; DOM.siteUrlInput.value = ""; DOM.siteWeightInput.value = "1";
-    renderAdminDomainList(); autoSaveTempConfig(); showToast("站点已添加", "success");
+    const name = DOM.siteNameInput.value.trim();
+    const url = DOM.siteUrlInput.value.trim();
+    const weight = Number(DOM.siteWeightInput.value) || 1;
+    if (!name || !url) return showToast("请填写站点名称和链接", "warning");
+    if (!validHttpUrl(url)) return showToast("链接必须以http/https开头", "error");
+    if (urlExistInList(url)) return showToast("该站点已存在", "warning");
+    const newItem = {
+        id: genUniqueId("site"),
+        name,
+        url,
+        weight,
+        open: false
+    };
+    tempConfig.domainConfig.push(newItem);
+    DOM.siteNameInput.value = "";
+    DOM.siteUrlInput.value = "";
+    DOM.siteWeightInput.value = "1";
+    renderAdminDomainList();
+    autoSaveTemp();
+    showToast("站点添加成功", "success");
 }
 DOM.addSiteBtn.addEventListener("click", addNewSite);
 
-async function deleteSite(id) {
-    const t = tempConfig.domainConfig.find(s => s.id === id); if (!t) return;
-    if (!(await showConfirm("删除站点", "确定删除「" + t.name + "」？"))) return;
-    tempConfig.domainConfig = tempConfig.domainConfig.filter(i => i.id !== id);
-    renderAdminDomainList(); autoSaveTempConfig(); showToast("已删除", "success");
+async function deleteSiteItem(id) {
+    const target = tempConfig.domainConfig.find(s => s.id === id);
+    if (!target) return;
+    const ok = await showConfirm("删除站点", `确定删除「${target.name}」吗？`);
+    if (!ok) return;
+    tempConfig.domainConfig = tempConfig.domainConfig.filter(s => s.id !== id);
+    renderAdminDomainList();
+    autoSaveTemp();
+    showToast("站点已删除", "success");
 }
 
-function openEditSection(s) {
-    DOM.editSiteId.value = s.id; DOM.editNameInput.value = s.name; DOM.editUrlInput.value = s.url;
-    DOM.editWeightInput.value = Number(s.weight || 1); DOM.editOpenCheck.checked = s.open;
-    DOM.editSection.style.display = ""; DOM.editSection.scrollIntoView({ behavior: "smooth", block: "center" });
+function openSiteEdit(item) {
+    DOM.editSiteId.value = item.id;
+    DOM.editNameInput.value = item.name;
+    DOM.editUrlInput.value = item.url;
+    DOM.editWeightInput.value = item.weight || 1;
+    DOM.editOpenCheck.checked = item.open;
+    DOM.editSection.style.display = "block";
+    DOM.editSection.scrollIntoView({ behavior: "smooth", block: "center" });
 }
-DOM.editCloseBtn.addEventListener("click", () => { DOM.editSection.style.display = "none"; });
+DOM.editCloseBtn.addEventListener("click", () => DOM.editSection.style.display = "none");
 
-function saveEditSite() {
-    const sid = DOM.editSiteId.value, n = DOM.editNameInput.value.trim(), u = DOM.editUrlInput.value.trim();
-    const w = Number(DOM.editWeightInput.value) || 1, op = DOM.editOpenCheck.checked;
-    if (!n || !u) return showToast("名称和链接不能为空", "warning");
-    if (!isValidUrl(u)) return showToast("链接需 http:// 或 https://", "error");
-    if (isUrlDuplicate(u, sid)) return showToast("域名已被占用", "error");
-    const item = tempConfig.domainConfig.find(s => s.id === sid); if (!item) return;
-    Object.assign(item, { name: n, url: u, weight: w, open: op });
-    DOM.editSection.style.display = "none"; renderAdminDomainList(); autoSaveTempConfig(); showToast("修改已保存", "success");
+function saveEditedSite() {
+    const editId = DOM.editSiteId.value;
+    const name = DOM.editNameInput.value.trim();
+    const url = DOM.editUrlInput.value.trim();
+    const weight = Number(DOM.editWeightInput.value) || 1;
+    const open = DOM.editOpenCheck.checked;
+    if (!name || !url) return showToast("名称和链接不能为空", "warning");
+    if (!validHttpUrl(url)) return showToast("链接格式错误", "error");
+    if (urlExistInList(url, editId)) return showToast("该链接已被其他站点占用", "warning");
+    const target = tempConfig.domainConfig.find(s => s.id === editId);
+    if (!target) return;
+    target.name = name;
+    target.url = url;
+    target.weight = weight;
+    target.open = open;
+    DOM.editSection.style.display = "none";
+    renderAdminDomainList();
+    autoSaveTemp();
+    showToast("站点修改完成", "success");
 }
-DOM.editSaveBtn.addEventListener("click", saveEditSite);
+DOM.editSaveBtn.addEventListener("click", saveEditedSite);
 
 document.addEventListener("change", e => {
-    if (e.target.name && e.target.name.startsWith("stat_")) {
-        const s = tempConfig.domainConfig.find(x => x.id === e.target.name.replace("stat_", ""));
-        if (s) { s.open = e.target.value === "1"; autoSaveTempConfig(); }
-    }
+    const input = e.target;
+    if (!input.name?.startsWith("stat_")) return;
+    const siteId = input.name.replace("stat_", "");
+    const site = tempConfig.domainConfig.find(s => s.id === siteId);
+    if (!site) return;
+    site.open = input.value === "1";
+    autoSaveTemp();
 });
 
-// ==================== 内嵌网页 ====================
-function addEmbeddedPage() {
-    const n = DOM.embNameInput.value.trim(), u = DOM.embUrlInput.value.trim();
-    if (!n || !u) return showToast("请填写名称和链接", "warning");
-    if (!isValidUrl(u)) return showToast("链接需 http:// 或 https://", "error");
-    tempConfig.embeddedPages.push({ id: genId("emb"), name: n, url: u });
-    DOM.embNameInput.value = ""; DOM.embUrlInput.value = "";
-    renderEmbList(); autoSaveTempConfig(); showToast("内嵌网页已添加", "success");
+// ==================== 仓库管理 ====================
+function addRepoItem() {
+    const name = DOM.embNameInput.value.trim();
+    const url = DOM.embUrlInput.value.trim();
+    if (!name || !url) return showToast("请填写仓库名称和地址", "warning");
+    if (!validHttpUrl(url)) return showToast("仓库地址必须是http/https链接", "error");
+    tempConfig.embeddedPages.push({
+        id: genUniqueId("repo"),
+        name,
+        url
+    });
+    DOM.embNameInput.value = "";
+    DOM.embUrlInput.value = "";
+    renderEmbList();
+    autoSaveTemp();
+    updateJsonPreview(); // 新增：添加仓库后立刻刷新JSON预览
+    showToast("仓库已添加", "success");
 }
-DOM.addEmbBtn.addEventListener("click", addEmbeddedPage);
+DOM.addEmbBtn.addEventListener("click", addRepoItem);
 
-async function deleteEmb(id) {
-    const t = tempConfig.embeddedPages.find(p => p.id === id); if (!t) return;
-    if (!(await showConfirm("删除内嵌网页", "确定删除「" + t.name + "」？"))) return;
-    tempConfig.embeddedPages = tempConfig.embeddedPages.filter(p => p.id !== id);
-    renderEmbList(); autoSaveTempConfig(); showToast("已删除", "success");
+async function deleteRepoItem(id) {
+    const target = tempConfig.embeddedPages.find(r => r.id === id);
+    if (!target) return;
+    const ok = await showConfirm("删除仓库", `确定删除仓库「${target.name}」？`);
+    if (!ok) return;
+    tempConfig.embeddedPages = tempConfig.embeddedPages.filter(r => r.id !== id);
+    renderEmbList();
+    autoSaveTemp();
+    showToast("仓库已删除", "success");
 }
 
-// ==================== 跳转 ====================
-function selectSite(id) {
-    const t = onlineConfig.domainConfig.find(s => s.id === id); if (!t) return;
-    currentSite = t; onlineConfig.lastSelectSiteId = id; tempConfig.lastSelectSiteId = id;
-    saveLocalConfig(); updateJumpBtnStatus(); resetCountdown(); renderHomeDomainList();
+// ==================== 自动跳转站点逻辑 ====================
+function selectTargetSite(id) {
+    const site = onlineConfig.domainConfig.find(s => s.id === id);
+    if (!site) return;
+    currentSite = site;
+    onlineConfig.lastSelectSiteId = id;
+    tempConfig.lastSelectSiteId = id;
+    saveLocalConfig();
+    updateJumpBtnStatus();
+    resetCountdown();
+    renderHomeDomainList();
 }
-function updateJumpBtnStatus() { DOM.jumpBtn.disabled = !(currentSite && currentSite.open); }
-function goJump() {
-    if (!currentSite || !currentSite.open) return showToast("站点未开放", "error");
-    clearInterval(timer); const u = currentSite.url + params;
-    if (onlineConfig.openNewTab) window.open(u, "_blank"); else location.href = u;
+function updateJumpBtnStatus() {
+    DOM.jumpBtn.disabled = !(currentSite && currentSite.open);
 }
-DOM.jumpBtn.addEventListener("click", goJump);
+function jumpToSite() {
+    if (!currentSite || !currentSite.open) return showToast("当前站点未开放", "error");
+    clearInterval(timer);
+    const jumpUrl = currentSite.url + urlParams;
+    if (onlineConfig.openNewTab) {
+        window.open(jumpUrl, "_blank");
+    } else {
+        location.href = jumpUrl;
+    }
+}
+DOM.jumpBtn.addEventListener("click", jumpToSite);
 
-// ==================== 倒计时 ====================
+// ==================== 倒计时逻辑 ====================
 function resetCountdown() {
-    clearInterval(timer); isPause = false; DOM.pauseBtn.textContent = "暂停倒计时";
-    count = Number(onlineConfig.waitSecond) || 10; DOM.countDom.textContent = count;
-    DOM.barDom.style.width = "0%"; DOM.circleLoader.classList.remove("paused"); startTimer();
+    clearInterval(timer);
+    isPause = false;
+    DOM.pauseBtn.textContent = "暂停倒计时";
+    count = Number(onlineConfig.waitSecond) || 10;
+    DOM.countDom.textContent = count;
+    DOM.progressBar.style.width = "0%";
+    DOM.circleLoader.classList.remove("paused");
+    startCountTimer();
 }
-function startTimer() {
-    const total = onlineConfig.waitSecond || 10;
+function startCountTimer() {
+    const totalSec = onlineConfig.waitSecond || 10;
     timer = setInterval(() => {
         if (!currentSite || !currentSite.open || isPause) return;
-        count--; DOM.countDom.textContent = count; DOM.barDom.style.width = ((total - count) / total * 100) + "%";
-        if (count <= 3 && count > 0) { DOM.countDom.style.transform = "scale(1.12)"; setTimeout(() => { DOM.countDom.style.transform = "scale(1)"; }, 180); }
-        if (count <= 0) { clearInterval(timer); goJump(); }
+        count -= 1;
+        DOM.countDom.textContent = count;
+        const percent = ((totalSec - count) / totalSec) * 100;
+        DOM.progressBar.style.width = `${percent}%`;
+        if (count <= 3 && count > 0) {
+            DOM.countDom.style.transform = "scale(1.12)";
+            setTimeout(() => DOM.countDom.style.transform = "scale(1)", 180);
+        }
+        if (count <= 0) {
+            clearInterval(timer);
+            jumpToSite();
+        }
     }, 1000);
 }
 DOM.pauseBtn.addEventListener("click", () => {
-    isPause = !isPause; DOM.pauseBtn.textContent = isPause ? "恢复倒计时" : "暂停倒计时";
+    isPause = !isPause;
+    DOM.pauseBtn.textContent = isPause ? "恢复倒计时" : "暂停倒计时";
     DOM.circleLoader.classList.toggle("paused", isPause);
 });
 
-// ==================== 一键保存并导出 ====================
+// ==================== 一键保存复制JSON（方案A：读取仓库列表第一条地址自动打开） ====================
 async function addSaveAndExport() {
-    if (DOM.newPwdInput.value.trim()) changePwd();
+    if (DOM.newPwdInput.value.trim()) changeAdminPwd();
     tempConfig.waitSecond = Number(DOM.waitSecondInput.value) || 10;
     tempConfig.openNewTab = DOM.globalNewTabSwitch.checked;
     tempConfig.adminPwd = adminPassword;
-    onlineConfig = deepClone(tempConfig); tempConfig = deepClone(onlineConfig);
-    saveLocalConfig(); renderAll(); renderAdminDomainList(); renderEmbList(); resetCountdown(); updateJsonPreview();
-    const jsonStr = JSON.stringify(onlineConfig, null, 2);
-    try { await navigator.clipboard.writeText(jsonStr); } catch (e) {
-        const ta = document.createElement("textarea"); ta.value = jsonStr;
-        ta.style.cssText = "position:fixed;opacity:0;z-index:-9999"; document.body.appendChild(ta);
-        ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    onlineConfig = deepClone(tempConfig);
+    tempConfig = deepClone(onlineConfig);
+    saveLocalConfig();
+    renderAll();
+    renderAdminDomainList();
+    renderEmbList();
+    // 仅跳转台页面重置倒计时，其他页面不启动
+    if (currentTab === "jump") {
+        resetCountdown();
     }
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const bUrl = URL.createObjectURL(blob); const a = document.createElement("a");
-    a.href = bUrl; a.download = "config.json"; document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(bUrl);
-    localStorage.removeItem(HAS_EDITS_KEY); hasLocalEdits = false; updateEditsBadge();
-    showToast("配置已保存，JSON 已复制到剪贴板并下载", "success", 4000);
+    updateJsonPreview();
+
+    // 复制JSON到剪贴板
+    const fullJson = JSON.stringify(onlineConfig, null, 2);
+    try {
+        await navigator.clipboard.writeText(fullJson);
+    } catch (err) {
+        const textarea = document.createElement("textarea");
+        textarea.value = fullJson;
+        textarea.style.cssText = "position:fixed;opacity:0;z-index:-9999;pointer-events:none";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+    }
+
+    // 方案A：读取仓库列表第一条地址，不再读取输入框
+    let openRepoUrl = "";
+    if (tempConfig.embeddedPages.length > 0) {
+        openRepoUrl = tempConfig.embeddedPages[0].url;
+    }
+
+    if (openRepoUrl) {
+        if (validHttpUrl(openRepoUrl)) {
+            window.open(openRepoUrl, "_blank");
+            showToast("配置已保存，JSON已复制剪贴板，仓库地址已新标签打开", "success", 4000);
+        } else {
+            showToast("配置已保存，JSON已复制剪贴板，仓库地址格式无效无法打开", "warning", 4000);
+        }
+    } else {
+        showToast("配置已保存，JSON已复制剪贴板（暂无仓库）", "success", 4000);
+    }
+
+    localStorage.removeItem(HAS_EDIT_STORAGE_KEY);
+    hasLocalEdit = false;
+    updateEditBadge();
 }
 DOM.addSaveExportBtn.addEventListener("click", addSaveAndExport);
 DOM.addSaveExportBtn2.addEventListener("click", addSaveAndExport);
 
-// ==================== 渲染 ====================
+// ==================== 渲染函数 ====================
+// 跳转台站点列表
 function renderHomeDomainList() {
-    const w = DOM.homeDomainWrap; w.innerHTML = "";
-    const list = [...onlineConfig.domainConfig].sort((a, b) => (Number(a.weight) || 1) - (Number(b.weight) || 1));
+    const wrap = DOM.homeDomainWrap;
+    wrap.innerHTML = "";
+    const sortedList = [...onlineConfig.domainConfig].sort((a, b) => (Number(a.weight) || 1) - (Number(b.weight) || 1));
     const jumpHero = document.querySelector(".jump-hero");
-    if (!list.length) {
-        w.innerHTML = '<div class="domain-empty">暂无站点，请登录管理员添加</div>';
+    if (sortedList.length === 0) {
+        wrap.innerHTML = '<div class="domain-empty">暂无站点，请登录管理员添加</div>';
         currentSite = null;
         updateJumpBtnStatus();
-        // 无站点时隐藏倒计时区域
         if (jumpHero) jumpHero.style.display = "none";
         return;
     }
-    // 存在站点则显示倒计时区域
     if (jumpHero) jumpHero.style.display = "block";
     const frag = document.createDocumentFragment();
-    list.forEach((s, i) => {
-        const d = document.createElement("div"); d.className = "site-item" + (s.open ? "" : " close-state");
-        if (currentSite && currentSite.id === s.id) d.classList.add("selected");
-        d.style.animationDelay = i * .04 + "s";
-        const row = document.createElement("div"); row.className = "site-row";
-        const nm = document.createElement("span"); nm.className = "site-name"; nm.textContent = s.name;
-        const tg = document.createElement("span"); tg.className = "site-tag " + (s.open ? "open" : "closed"); tg.textContent = s.open ? "已开放" : "未开放";
-        row.appendChild(nm); row.appendChild(tg);
-        const ur = document.createElement("div"); ur.className = "site-url"; ur.textContent = s.url;
-        d.appendChild(row); d.appendChild(ur);
-        d.addEventListener("click", () => selectSite(s.id)); frag.appendChild(d);
+    sortedList.forEach((item, idx) => {
+        const div = document.createElement("div");
+        div.className = `site-item ${item.open ? "" : "close-state"}`;
+        if (currentSite?.id === item.id) div.classList.add("selected");
+        div.style.animationDelay = `${idx * 0.04}s`;
+        div.innerHTML = `
+            <div class="site-row">
+                <span class="site-name">${escapeHtml(item.name)}</span>
+                <span class="site-tag ${item.open ? "open" : "closed"}">${item.open ? "已开放" : "未开放"}</span>
+            </div>
+            <div class="site-url">${escapeHtml(item.url)}</div>
+        `;
+        div.addEventListener("click", () => selectTargetSite(item.id));
+        frag.appendChild(div);
     });
-    w.appendChild(frag);
+    wrap.appendChild(frag);
 }
 
-
+// 管理员站点列表
 function renderAdminDomainList() {
-    const w = DOM.adminDomainWrap; w.innerHTML = "";
+    const wrap = DOM.adminDomainWrap;
+    wrap.innerHTML = "";
     if (!isAdminLogin) return;
-    const list = [...tempConfig.domainConfig].sort((a, b) => (Number(a.weight) || 10) - (Number(b.weight) || 10));
-    if (!list.length) { w.innerHTML = '<div class="domain-empty">暂无站点</div>'; return; }
+    const sortedList = [...tempConfig.domainConfig].sort((a, b) => (Number(a.weight) || 1) - (Number(b.weight) || 1));
+    if (sortedList.length === 0) {
+        wrap.innerHTML = '<div class="domain-empty">暂无站点</div>';
+        return;
+    }
     const frag = document.createDocumentFragment();
-    list.forEach(s => {
-        const d = document.createElement("div"); d.className = "site-item admin-item"; d.style.cursor = "default";
-        const info = document.createElement("div"); info.className = "admin-item-info";
-        const ne = document.createElement("div"); ne.className = "site-name"; ne.textContent = s.name + " | 权重:" + (s.weight || 1);
-        const ue = document.createElement("div"); ue.className = "site-url"; ue.textContent = s.url;
-        info.appendChild(ne); info.appendChild(ue);
-        const act = document.createElement("div"); act.className = "admin-item-actions";
-        const rg = document.createElement("div"); rg.style.cssText = "display:flex;gap:8px;font-size:12px";
-        const mkR = (v, l, c) => { const lb = document.createElement("label"); lb.style.cssText = "color:" + c + ";cursor:pointer;display:flex;align-items:center;gap:3px"; const r = document.createElement("input"); r.type = "radio"; r.name = "stat_" + s.id; r.value = v; if ((v === "1" && s.open) || (v === "0" && !s.open)) r.checked = true; lb.appendChild(r); lb.appendChild(document.createTextNode(l)); return lb; };
-        rg.appendChild(mkR("1", "开放", "var(--success)")); rg.appendChild(mkR("0", "关闭", "var(--danger)"));
-        const eb = document.createElement("button"); eb.className = "btn btn-secondary btn-sm"; eb.textContent = "编辑"; eb.addEventListener("click", () => openEditSection(s));
-        const db = document.createElement("button"); db.className = "btn btn-danger btn-sm"; db.textContent = "删除"; db.addEventListener("click", () => deleteSite(s.id));
-        act.appendChild(rg); act.appendChild(eb); act.appendChild(db);
-        d.appendChild(info); d.appendChild(act); frag.appendChild(d);
+    sortedList.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "site-item admin-item";
+        div.style.cursor = "default";
+        div.innerHTML = `
+            <div class="admin-item-info">
+                <div class="site-name">${escapeHtml(item.name)} | 权重:${item.weight || 1}</div>
+                <div class="site-url">${escapeHtml(item.url)}</div>
+            </div>
+            <div class="admin-item-actions">
+                <div class="radio-group" style="display:flex;gap:8px;font-size:12px;">
+                    <label class="radio-label">
+                        <input type="radio" name="stat_${item.id}" value="1" ${item.open ? "checked" : ""}>
+                        <span>开放</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="stat_${item.id}" value="0" ${!item.open ? "checked" : ""}>
+                        <span>关闭</span>
+                    </label>
+                </div>
+                <button class="btn btn-secondary btn-sm edit-btn">编辑</button>
+                <button class="btn btn-danger btn-sm del-btn">删除</button>
+            </div>
+        `;
+        div.querySelector(".edit-btn").addEventListener("click", () => openSiteEdit(item));
+        div.querySelector(".del-btn").addEventListener("click", () => deleteSiteItem(item.id));
+        frag.appendChild(div);
     });
-    w.appendChild(frag);
+    wrap.appendChild(frag);
 }
 
+// 仓库列表【修复DOM结构，适配CSS单行截断，解决名称竖排、卡片过高】
 function renderEmbList() {
-    const w = DOM.embWrap; w.innerHTML = "";
-    if (!tempConfig.embeddedPages || !tempConfig.embeddedPages.length) return;
+    const wrap = DOM.embWrap;
+    wrap.innerHTML = "";
+    if (!tempConfig.embeddedPages?.length) return;
     const frag = document.createDocumentFragment();
-    tempConfig.embeddedPages.forEach(p => {
-        const d = document.createElement("div"); d.className = "emb-item";
-        const ns = document.createElement("span"); ns.className = "emb-item-name"; ns.textContent = p.name;
-        const us = document.createElement("span"); us.className = "emb-item-url"; us.textContent = p.url;
-        const db = document.createElement("button"); db.className = "btn btn-danger btn-sm"; db.style.cssText = "padding:3px 8px;font-size:11px"; db.textContent = "删除"; db.addEventListener("click", () => deleteEmb(p.id));
-        d.appendChild(ns); d.appendChild(us); d.appendChild(db); frag.appendChild(d);
+    tempConfig.embeddedPages.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "emb-item";
+        // 新增emb-url-wrap容器包裹地址，用于弹性压缩
+        div.innerHTML = `
+            <span class="emb-name">${escapeHtml(item.name)}</span>
+            <div class="emb-url-wrap">
+                <span class="emb-url">${escapeHtml(item.url)}</span>
+            </div>
+            <button class="btn btn-danger btn-sm del-btn" style="padding:3px 8px;font-size:11px;">删除</button>
+        `;
+        div.querySelector(".del-btn").addEventListener("click", () => deleteRepoItem(item.id));
+        frag.appendChild(div);
     });
-    w.appendChild(frag);
+    wrap.appendChild(frag);
 }
 
-async function deleteEmbeddedFrame(id) {
-    const t = onlineConfig.embeddedPages.find(p => p.id === id);
-    if (!t) return;
-    if (!(await showConfirm("关闭内嵌网页", "确定关闭「" + t.name + "」？关闭后可在站点管理中重新添加。"))) return;
-    onlineConfig.embeddedPages = onlineConfig.embeddedPages.filter(p => p.id !== id);
-    tempConfig.embeddedPages = tempConfig.embeddedPages.filter(p => p.id !== id);
-    saveLocalConfig();
-    renderEmbeddedFrames();
-    showToast("已关闭「" + t.name + "」", "success");
-}
-
-// 已修复：清除旧标题防重复 + 加载失败新增打开按钮
-function renderEmbeddedFrames() {
-    const sec = DOM.embeddedSection, tabs = DOM.embTabs, fw = DOM.embFrameWrap;
-    const pages = onlineConfig.embeddedPages || [];
-    if (!pages.length) { sec.style.display = "none"; return; }
-    sec.style.display = "";
-    tabs.innerHTML = "";
-    fw.innerHTML = "";
-    // 清除上次渲染残留标题，杜绝重复多行标题
-    sec.querySelectorAll(".section-title").forEach(el => el.remove());
-
-    // 仅生成1次标题
-    const title = document.createElement("h3");
-    title.className = "section-title";
-    title.innerHTML = "&#128196; 预览内嵌网页";
-    sec.insertBefore(title, tabs);
-
-    pages.forEach((p, i) => {
-        const tab = document.createElement("div"); tab.className = "emb-tab" + (i === 0 ? " active" : "");
-        const tn = document.createElement("span"); tn.textContent = p.name;
-        const cb = document.createElement("span"); cb.className = "emb-tab-close"; cb.textContent = " x";
-        tab.appendChild(tn); tab.appendChild(cb);
-
-        // 创建 iframe 容器
-        const frameContainer = document.createElement("div");
-        frameContainer.className = "emb-frame-container";
-        frameContainer.style.display = i === 0 ? "block" : "none";
-
-        // 加载提示
-        const loading = document.createElement("div");
-        loading.className = "emb-loading";
-        loading.innerHTML = '<div class="emb-loading-spinner"></div><span>正在加载 ' + escapeHtml(p.name) + '...</span>';
-
-        // 错误提示（新增新标签打开按钮）
-        const errDiv = document.createElement("div");
-        errDiv.className = "emb-load-error";
-        errDiv.style.display = "none";
-        errDiv.innerHTML = `
-<div class="err-icon">&#9888;</div>
-<div class="err-msg">页面加载失败或被目标网站拦截</div>
-<div class="err-url">${escapeHtml(p.url)}</div>
-<div class="err-hint">该网站可能禁止在 iframe 中嵌入，请在浏览器中直接打开</div>
-<button onclick="window.open('${escapeHtml(p.url)}','_blank')" style="margin-top:8px;padding:6px 12px;background:#2563eb;color:#fff;border:none;border-radius:4px;">新标签打开原页面</button>
-`;
-
-        const ifr = document.createElement("iframe"); ifr.src = p.url;
-        ifr.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups");
-        ifr.setAttribute("loading", "lazy");
-        ifr.setAttribute("referrerpolicy", "no-referrer");
-        ifr.setAttribute("title", p.name);
-
-        ifr.addEventListener("load", () => {
-            loading.classList.add("hidden");
-            try {
-                const doc = ifr.contentDocument || ifr.contentWindow.document;
-                if (doc && doc.body && doc.body.innerHTML === "") {
-                    errDiv.style.display = "flex";
-                }
-            } catch (e) {}
-        });
-
-        ifr.addEventListener("error", () => {
-            loading.classList.add("hidden");
-            errDiv.style.display = "flex";
-        });
-
-        setTimeout(() => {
-            if (!loading.classList.contains("hidden")) {
-                loading.classList.add("hidden");
-                errDiv.style.display = "flex";
-            }
-        }, 15000);
-
-        tab.addEventListener("click", e => {
-            if (e.target === cb) {
-                deleteEmbeddedFrame(p.id);
-                return;
-            }
-            tabs.querySelectorAll(".emb-tab").forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
-            fw.querySelectorAll(".emb-frame-container").forEach((fc, fi) => {
-                fc.style.display = fi === i ? "block" : "none";
-            });
-        });
-
-        frameContainer.appendChild(loading);
-        frameContainer.appendChild(errDiv);
-        frameContainer.appendChild(ifr);
-        tabs.appendChild(tab);
-        fw.appendChild(frameContainer);
-    });
-}
-
+// 全局统一渲染入口
 function renderAll() {
-    DOM.waitSecondInput.value = onlineConfig.waitSecond;
-    DOM.globalNewTabSwitch.checked = onlineConfig.openNewTab;
-    renderHomeDomainList(); updateJumpBtnStatus();
-    if (isAdminLogin) renderEmbeddedFrames();
+    DOM.waitSecondInput.value = tempConfig.waitSecond;
+    DOM.globalNewTabSwitch.checked = tempConfig.openNewTab;
+    renderHomeDomainList();
+    updateJumpBtnStatus();
 }
 
-
-
-function autoSelectSiteOnLoad() {
-    const lid = onlineConfig.lastSelectSiteId;
-    if (lid) { const l = onlineConfig.domainConfig.find(s => s.id === lid && s.open); if (l) { selectSite(l.id); return; } }
-    const t = getTopWeightOpenSite(); if (t) selectSite(t.id);
+// 页面加载自动选中第一个开放站点
+function autoSelectDefaultSite() {
+    const firstOpen = getFirstOpenSite();
+    if (!firstOpen) return;
+    selectTargetSite(firstOpen.id);
 }
 
-// ==================== 初始化 ====================
-window.addEventListener("load", loadOnlineConfig);
+// ==================== 页面加载监听 ====================
+window.addEventListener("load", loadAllConfig);
 window.addEventListener("offline", () => showToast("网络已断开", "warning"));
-if (document.referrer) DOM.sourceTip.textContent = "来路：" + document.referrer;
-document.addEventListener("keydown", e => { if (e.key === "Escape" && DOM.editSection.style.display !== "none") DOM.editSection.style.display = "none"; });
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && DOM.editSection.style.display !== "none") {
+        DOM.editSection.style.display = "none";
+    }
+});
