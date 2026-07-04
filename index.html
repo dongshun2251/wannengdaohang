@@ -89,9 +89,9 @@
           </div>
         </div>
         <div class="panel-section">
-          <h3 class="section-title">&#128196; 添加内嵌网页</h3>
+          <h3 class="section-title">&#128279; 添加仓库</h3>
           <div class="form-grid">
-            <div class="form-row"><input id="embNameInput" placeholder="名称" class="input" style="max-width:160px"><input id="embUrlInput" placeholder="https://xxx.com" class="input"><button class="btn btn-accent btn-sm" id="addEmbBtn">添加</button></div>
+            <div class="form-row"><input id="embNameInput" placeholder="仓库名称" class="input" style="max-width:160px"><input id="embUrlInput" placeholder="仓库地址URL" class="input"><button class="btn btn-accent btn-sm" id="addEmbBtn">添加</button></div>
           </div>
           <div id="embWrap" class="emb-list"></div>
         </div>
@@ -113,17 +113,12 @@
           <div class="config-card">
             <h3 class="section-title">&#128196; 操作</h3>
             <div class="btn-stack">
-              <button class="btn btn-primary btn-full" id="addSaveExportBtn">一键保存并导出</button>
+              <button class="btn btn-primary btn-full" id="addSaveExportBtn">一键保存复制JSON</button>
               <button class="btn btn-danger btn-full" id="logoutBtn">登出管理员</button>
             </div>
           </div>
         </div>
       </div>
-      <!-- 内嵌网页预览（系统配置内，仅管理员可见） -->
-      <section class="embedded-section" id="embeddedSection" style="display:none;">
-        <div class="emb-tabs" id="embTabs"></div>
-        <div class="emb-frame-wrap" id="embFrameWrap"></div>
-      </section>
       <div class="panel-section" id="configLoginHint" style="display:none;">
         <div class="empty-state">
           <p>请先在「站点管理」Tab 中登录管理员</p>
@@ -136,7 +131,7 @@
       <div class="panel-section">
         <div class="json-header">
           <h3 class="section-title">完整配置 JSON <span id="editsBadge" style="display:none;" class="edits-badge">有未导出的修改</span></h3>
-          <button class="btn btn-accent btn-sm" id="addSaveExportBtn2">一键保存并导出</button>
+          <button class="btn btn-accent btn-sm" id="addSaveExportBtn2">一键保存复制JSON</button>
         </div>
         <div class="json-box">
           <pre class="json-preview" id="jsonPreview"></pre>
