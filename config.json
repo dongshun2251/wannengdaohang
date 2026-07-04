@@ -27,5 +27,12 @@
       "weight": 1,
       "open": true
     }
+  ],
+  "embeddedPages": [
+    {
+      "id": "repo_1783129102599_j62d8spe",
+      "name": "我的仓库",
+      "url": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json"
+    }
   ]
 }
