@@ -2,7 +2,7 @@
   "waitSecond": 5,
   "openNewTab": true,
   "theme": "",
-  "lastSelectSiteId": "site_1782942208950_s0f4e02p9c",
+  "lastSelectSiteId": "site_1783194220882_nfari9lw",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "admin123",
   "domainConfig": [
@@ -30,7 +30,7 @@
     {
       "id": "site_1783194220882_nfari9lw",
       "name": "铁板鱿鱼串串香",
-      "url": "https://48ef0d3a.r38.cpolar.top",
+      "url": "http://75f4ab94.r16.vip.cpolar.cn",
       "weight": 1,
       "open": true
     }
