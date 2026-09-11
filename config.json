@@ -2,18 +2,10 @@
   "waitSecond": 5,
   "openNewTab": true,
   "theme": "",
-  "lastSelectSiteId": "site_1783194220882_nfari9lw",
+  "lastSelectSiteId": "site_1784045344201_rguz8g5j",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "admin123",
-  "domainConfig": [
-    {
-      "id": "site_1784045344201_rguz8g5j",
-      "name": "多人联机游戏平台",
-      "url": "http://61be29e8.r16.vip.cpolar.cn",
-      "weight": 1,
-      "open": true
-    }
-  ],
+  "domainConfig": [],
   "embeddedPages": [
     {
       "id": "repo_1783129102599_j62d8spe",
