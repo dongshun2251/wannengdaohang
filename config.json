@@ -9,11 +9,11 @@
   "domainConfig": [
     {
       "id": "site_1791123911284_u2cjcqrg",
-      "name": "美食菜谱分享",
+      "name": "车载娱乐系统",
       "url": "https://202a1023.r16.vip.cpolar.cn",
       "icon": "https://www.google.com/s2/favicons/?domain_url=https%3A%2F%2F202a1023.r16.vip.cpolar.cn&sz=64",
-      "category": "美食",
-      "description": "美食菜谱分享",
+      "category": "娱乐",
+      "description": "车载娱乐系统",
       "weight": 1,
       "open": true
     }
