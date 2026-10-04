@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,10 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="icon" type="image/png" href="./img/站点图标.png">
+  <link rel="stylesheet" href="style.css?v=32">
 </head>
+
 <body>
   <div class="bg-orb"></div>
   <div class="bg-orb"></div>
@@ -17,21 +20,45 @@
   <!-- ====== 顶部 ====== -->
   <header class="app-header">
     <div class="header-left">
-      <span class="logo">&#9672;</span>
+      <img class="logo logo-image" src="./img/站点图标.png" alt="">
       <span class="brand">网站中转站</span>
     </div>
     <div class="header-right">
       <span class="source-tip" id="sourceTip"></span>
-      <button class="icon-btn" id="themeSwitchBtn" title="切换主题">&#9789;</button>
+      <div class="theme-control">
+        <button class="icon-btn" id="themeSwitchBtn" title="外观设置" aria-label="打开外观设置" aria-haspopup="dialog"
+          aria-expanded="false">🎨</button>
+        <div class="theme-popover" id="themePopover" role="dialog" aria-label="外观设置" hidden>
+          <div class="theme-popover-heading">外观模式</div>
+          <div class="theme-mode-options" role="group" aria-label="外观模式">
+            <button class="theme-mode-btn" type="button" data-mode="system">跟随系统</button>
+            <button class="theme-mode-btn" type="button" data-mode="light">浅色</button>
+            <button class="theme-mode-btn" type="button" data-mode="dark">深色</button>
+          </div>
+          <div class="theme-popover-heading">强调色</div>
+          <div class="theme-color-options" role="group" aria-label="强调色">
+            <button class="theme-color-btn" type="button" data-theme="" aria-label="青绿色" title="青绿色"><span></span></button>
+            <button class="theme-color-btn" type="button" data-theme="mint" aria-label="薄荷绿" title="薄荷绿"><span></span></button>
+            <button class="theme-color-btn" type="button" data-theme="pink" aria-label="粉色" title="粉色"><span></span></button>
+            <button class="theme-color-btn" type="button" data-theme="cyan" aria-label="冰川蓝" title="冰川蓝"><span></span></button>
+            <button class="theme-color-btn" type="button" data-theme="indigo" aria-label="靛青色" title="靛青色"><span></span></button>
+            <button class="theme-color-btn" type="button" data-theme="slate" aria-label="石板灰" title="石板灰"><span></span></button>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
   <!-- ====== Tab 导航 ====== -->
   <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="jump"><span class="tab-icon">&#10148;</span><span class="tab-text">跳转台</span></button>
-    <button class="tab-btn" data-tab="sites"><span class="tab-icon">&#127760;</span><span class="tab-text">站点管理</span></button>
-    <button class="tab-btn" data-tab="config"><span class="tab-icon">&#9881;</span><span class="tab-text">系统配置</span></button>
-    <button class="tab-btn" data-tab="json"><span class="tab-icon">&#128196;</span><span class="tab-text">JSON 预览</span></button>
+    <button class="tab-btn active" data-tab="jump"><span class="tab-icon">&#10148;</span><span
+        class="tab-text">跳转台</span></button>
+    <button class="tab-btn" data-tab="sites"><span class="tab-icon">&#127760;</span><span
+        class="tab-text">站点管理</span></button>
+    <button class="tab-btn" data-tab="config"><span class="tab-icon">&#9881;</span><span
+        class="tab-text">系统配置</span></button>
+    <button class="tab-btn" data-tab="json"><span class="tab-icon">&#128196;</span><span class="tab-text">JSON
+        预览</span></button>
   </nav>
 
   <!-- ====== Tab 内容区 ====== -->
@@ -39,19 +66,22 @@
 
     <!-- Tab 1: 跳转台 -->
     <div class="tab-panel active" id="panel-jump">
-      <div class="jump-hero">
-        <div class="loader" id="circleLoader"></div>
-        <h1>即将跳转至目标站点</h1>
-        <p class="subtitle">页面将在 <span class="count-num" id="count-num">10</span> 秒后自动跳转</p>
-        <div class="progress-box"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="jump-hero directory-hero">
+        <h1>常用站点</h1>
+        <p class="subtitle">浏览、搜索并选择站点；仅在你点击“访问”后打开链接。</p>
       </div>
       <div class="panel-section">
         <h3 class="section-title">选择目标站点</h3>
-        <div id="homeDomainWrap" class="site-list"></div>
-        <div class="btn-row">
-          <button class="btn btn-secondary" id="pauseBtn">暂停倒计时</button>
-          <button class="btn btn-primary" id="jumpBtn">立即访问</button>
+        <div class="site-tools">
+          <input id="siteSearchInput" class="input" type="search" placeholder="搜索站点名称、网址或说明" aria-label="搜索站点">
+          <select id="siteCategoryFilter" class="input" aria-label="按分类筛选">
+            <option value="">全部分类</option>
+          </select>
+          <label class="filter-check"><input type="checkbox" id="favoritesOnly"> 只看收藏</label>
+          <button class="btn btn-secondary btn-sm" id="recentOnlyBtn" type="button" aria-pressed="false">最近访问</button>
         </div>
+        <div class="site-summary" id="siteSummary"></div>
+        <div id="homeDomainWrap" class="site-list"></div>
       </div>
     </div>
 
@@ -70,28 +100,80 @@
           <div class="form-grid">
             <div class="form-row"><input id="siteNameInput" placeholder="站点名称" class="input"></div>
             <div class="form-row"><input id="siteUrlInput" placeholder="https://example.com" class="input"></div>
-            <div class="form-row"><input type="number" id="siteWeightInput" value="1" min="0" class="input input-sm" style="max-width:120px"><button class="btn btn-accent btn-sm" id="addSiteBtn">添加</button></div>
+            <div class="form-row site-meta-row">
+              <input id="siteIconInput" class="input input-sm" placeholder="输入网址后自动识别图标，也可填 emoji 或图片网址"
+                aria-label="站点图标">
+              <input id="siteCategoryInput" class="input input-sm" maxlength="40" placeholder="分类，如 工具">
+              <input id="siteDescriptionInput" class="input" maxlength="240" placeholder="站点说明（可选）">
+              <input type="number" id="siteWeightInput" value="1" min="0" class="input input-sm" aria-label="排序权重"
+                placeholder="排序权重（小的靠前）">
+              <button class="btn btn-accent btn-sm" id="addSiteBtn">添加</button>
+            </div>
           </div>
         </div>
         <div class="panel-section">
           <h3 class="section-title">&#127760; 站点列表</h3>
+          <div class="bulk-tools">
+            <div class="bulk-selection-row">
+              <label class="filter-check"><input type="checkbox" id="selectAllSites"> 全选站点</label>
+              <span id="selectedSiteCount" class="field-help">已选 0 个</span>
+            </div>
+            <div class="bulk-edit-row">
+              <label class="filter-check"><input type="checkbox" id="bulkCategoryEnabled"> 统一分类</label>
+              <input id="bulkCategoryInput" class="input input-sm" maxlength="40" placeholder="填写分类；留空表示清空" disabled>
+              <select id="bulkOpenState" class="input input-sm" aria-label="批量开放状态" hidden>
+                <option value="">开放状态不变</option>
+                <option value="open">批量开放</option>
+                <option value="closed">批量关闭</option>
+              </select>
+              <div class="bulk-state-select">
+                <button class="input input-sm bulk-state-trigger" id="bulkOpenStateTrigger" type="button"
+                  aria-label="批量开放状态" aria-haspopup="listbox" aria-expanded="false" aria-controls="bulkOpenStateMenu">
+                  <span>开放状态不变</span><span class="bulk-state-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="bulk-state-menu" id="bulkOpenStateMenu" role="listbox" aria-label="批量开放状态" hidden>
+                  <button type="button" class="bulk-state-option selected" role="option" data-value="" aria-selected="true">开放状态不变</button>
+                  <button type="button" class="bulk-state-option" role="option" data-value="open" aria-selected="false">批量开放</button>
+                  <button type="button" class="bulk-state-option" role="option" data-value="closed" aria-selected="false">批量关闭</button>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="applyBulkEditBtn" type="button">应用到已选</button>
+            </div>
+            <details class="bulk-import">
+              <summary>批量添加站点</summary>
+              <p class="field-help">每行一个站点，格式：名称 | URL | 分类 | 说明（后两项可省略）。新站点默认关闭。</p>
+              <textarea id="bulkSiteInput" class="input" rows="4" placeholder="示例站点 | https://example.com | 工具 | 站点说明"></textarea>
+              <button class="btn btn-secondary btn-sm" id="bulkImportSitesBtn" type="button">添加有效站点</button>
+            </details>
+          </div>
           <div id="adminDomainWrap" class="admin-site-list"></div>
         </div>
         <div class="panel-section" id="editSection" style="display:none;">
-          <h3 class="section-title">&#9998; 编辑站点 <button class="icon-btn btn-close" id="editCloseBtn">&times;</button></h3>
+          <h3 class="section-title">&#9998; 编辑站点 <button class="icon-btn btn-close" id="editCloseBtn">&times;</button>
+          </h3>
           <input type="hidden" id="editSiteId">
           <div class="form-grid">
             <div class="form-row"><input id="editNameInput" placeholder="站点名称" class="input"></div>
             <div class="form-row"><input id="editUrlInput" placeholder="https://example.com" class="input"></div>
-            <div class="form-row"><input type="number" id="editWeightInput" min="0" class="input input-sm" style="max-width:120px" placeholder="权重"></div>
-            <div class="form-row"><label class="toggle-label"><input type="checkbox" id="editOpenCheck"><span class="toggle-track"></span><span>站点已开放</span></label></div>
+            <div class="form-row site-meta-row">
+              <input id="editIconInput" class="input input-sm" placeholder="自动识别图标，也可填 emoji 或图片网址"
+                aria-label="站点图标">
+              <input id="editCategoryInput" class="input input-sm" maxlength="40" placeholder="分类">
+              <input id="editDescriptionInput" class="input" maxlength="240" placeholder="站点说明">
+            </div>
+            <div class="form-row"><input type="number" id="editWeightInput" min="0" class="input input-sm"
+                placeholder="排序权重（小的靠前）"></div>
+            <div class="form-row"><label class="toggle-label"><input type="checkbox" id="editOpenCheck"><span
+                  class="toggle-track"></span><span>站点已开放</span></label></div>
             <div class="form-row"><button class="btn btn-primary btn-sm" id="editSaveBtn">确认修改</button></div>
           </div>
         </div>
         <div class="panel-section">
           <h3 class="section-title">&#128279; 添加仓库</h3>
           <div class="form-grid">
-            <div class="form-row"><input id="embNameInput" placeholder="仓库名称" class="input" style="max-width:160px"><input id="embUrlInput" placeholder="仓库地址URL" class="input"><button class="btn btn-accent btn-sm" id="addEmbBtn">添加</button></div>
+            <div class="form-row"><input id="embNameInput" placeholder="仓库名称" class="input"
+                style="max-width:160px"><input id="embUrlInput" placeholder="仓库地址URL" class="input"><button
+                class="btn btn-accent btn-sm" id="addEmbBtn">添加</button></div>
           </div>
           <div id="embWrap" class="emb-list"></div>
         </div>
@@ -105,18 +187,42 @@
           <div class="config-card">
             <h3 class="section-title">&#9881; 基础配置</h3>
             <div class="form-grid">
-              <div class="form-item"><label class="field-label">管理员密码</label><input type="password" id="newPwdInput" placeholder="修改密码" class="input"></div>
-              <div class="form-item"><label class="field-label">倒计时(秒)</label><input type="number" id="waitSecondInput" min="1" max="60" class="input"></div>
-              <div class="form-item"><label class="toggle-label"><input type="checkbox" id="globalNewTabSwitch"><span class="toggle-track"></span><span>新标签打开</span></label></div>
+              <div class="form-item"><label class="field-label">管理员密码</label><input type="password" id="newPwdInput"
+                  placeholder="修改密码" class="input"></div>
+              <div class="form-item"><p class="field-help">密码以 PBKDF2-SHA-256 哈希保存，不保存明文；静态托管仍无法提供真正的管理员权限保护。</p></div>
+              <div class="form-item"><label class="toggle-label"><input type="checkbox" id="globalNewTabSwitch"><span
+                    class="toggle-track"></span><span>新标签打开</span></label></div>
+              <div class="form-item"><p class="field-help">收藏、访问记录、检测结果和版本历史保存在当前浏览器，不会自动同步到其他设备。</p></div>
+              <div class="form-item">
+                <label class="field-label" for="statusNotificationMode">检测结果通知方式</label>
+                <select id="statusNotificationMode" class="input">
+                  <option value="sequential">逐站通知（每条 10 秒）</option>
+                  <option value="summary">汇总通知</option>
+                </select>
+              </div>
+              <div class="form-item"><p class="field-help">检测说明：HTTP 成功响应只表示服务器接受 HEAD 探测，不保证网页内部功能正常；部分站点不支持 HEAD；超时、跨域或网络限制时会标记为“无法确认”。</p></div>
             </div>
           </div>
           <div class="config-card">
             <h3 class="section-title">&#128196; 操作</h3>
             <div class="btn-stack">
               <button class="btn btn-primary btn-full" id="addSaveExportBtn">一键保存复制JSON</button>
+              <button class="btn btn-accent btn-full" id="backupConfigBtn">备份配置到文件</button>
+              <button class="btn btn-accent btn-full" id="restoreConfigBtn">从备份恢复</button>
+              <input type="file" id="restoreConfigFile" accept="application/json,.json" hidden>
+              <button class="btn btn-accent btn-full" id="checkAllSitesBtn">检测所有站点</button>
               <button class="btn btn-danger btn-full" id="logoutBtn">登出管理员</button>
             </div>
           </div>
+        </div>
+        <div class="config-card history-card">
+          <h3 class="section-title">本机访问统计</h3>
+          <div id="visitStats" class="stats-list"></div>
+        </div>
+        <div class="config-card history-card">
+          <h3 class="section-title">本机配置版本</h3>
+          <p class="field-help">每次修改前自动备份最近 20 个版本；记录仅保存在此浏览器。</p>
+          <div id="configVersions" class="version-list"></div>
         </div>
       </div>
       <div class="panel-section" id="configLoginHint" style="display:none;">
@@ -130,8 +236,13 @@
     <div class="tab-panel" id="panel-json">
       <div class="panel-section">
         <div class="json-header">
-          <h3 class="section-title">完整配置 JSON <span id="editsBadge" style="display:none;" class="edits-badge">有未导出的修改</span></h3>
-          <button class="btn btn-accent btn-sm" id="addSaveExportBtn2">一键保存复制JSON</button>
+          <h3 class="section-title">完整配置 JSON <span id="editsBadge" style="display:none;"
+              class="edits-badge">本机修改需发布</span></h3>
+          <div class="json-header-actions">
+            <button class="btn btn-accent btn-sm" id="addSaveExportBtn2">一键保存复制JSON</button>
+            <a class="btn btn-primary btn-sm repo-quick-link" id="repoQuickLink" target="_blank"
+              rel="noopener noreferrer" hidden>前往</a>
+          </div>
         </div>
         <div class="json-box">
           <pre class="json-preview" id="jsonPreview"></pre>
@@ -140,6 +251,7 @@
     </div>
   </div>
 
-  <script src="main.js?v=7"></script>
+  <script src="main.js?v=39"></script>
 </body>
+
 </html>
