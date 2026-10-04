@@ -5,15 +5,7 @@
   "lastSelectSiteId": "site_1791106375837_q5kmn2mh",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwd": "jiang2251768498.",
-  "domainConfig": [
-    {
-      "id": "site_1791106375837_q5kmn2mh",
-      "name": "我的GitHub仓库",
-      "url": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
-      "weight": 10,
-      "open": true
-    }
-  ],
+  "domainConfig": [],
   "embeddedPages": [
     {
       "id": "repo_1783129102599_j62d8spe",
