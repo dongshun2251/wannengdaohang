@@ -1,11 +1,23 @@
 {
-  "waitSecond": 10,
   "openNewTab": true,
-  "theme": "",
-  "lastSelectSiteId": "site_1791106375837_q5kmn2mh",
+  "theme": "mint",
+  "lastSelectSiteId": "site_1791123911284_u2cjcqrg",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
-  "adminPwd": "jiang2251768498.",
-  "domainConfig": [],
+  "adminPwdHash": "w08aExyDfWJg+SJrsp+pDLHUqYdbm4cPpytl0FH0IAM=",
+  "adminPwdSalt": "nwAXp3LS2E+cpkqAHRV84w==",
+  "adminPwdIterations": 310000,
+  "domainConfig": [
+    {
+      "id": "site_1791123911284_u2cjcqrg",
+      "name": "美食菜谱分享",
+      "url": "https://202a1023.r16.vip.cpolar.cn",
+      "icon": "https://www.google.com/s2/favicons/?domain_url=https%3A%2F%2F202a1023.r16.vip.cpolar.cn&sz=64",
+      "category": "美食",
+      "description": "美食菜谱分享",
+      "weight": 1,
+      "open": true
+    }
+  ],
   "embeddedPages": [
     {
       "id": "repo_1783129102599_j62d8spe",
