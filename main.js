@@ -1276,7 +1276,6 @@ async function checkSiteStatus(site, { silent = false } = {}) {
     if (silent) {
       updateSiteStatusViews(site);
     } else {
-      renderHomeDomainList();
       renderAdminDomainList();
     }
   } finally {
@@ -1284,33 +1283,17 @@ async function checkSiteStatus(site, { silent = false } = {}) {
   }
 }
 function updateSiteStatusViews(site) {
-  const availability = siteAvailability(site.id, site.url);
   const statusText = linkStatusText(site.id, site.url);
-  const isSiteAvailable = site.open && availability.className === "reachable";
-  [DOM.homeDomainWrap, DOM.adminDomainWrap].forEach(wrap => {
-    for (const item of wrap.querySelectorAll(".site-item[data-site-id]")) {
-      if (item.dataset.siteId !== site.id) continue;
-      const status = item.querySelector(".site-status");
-      if (status) {
-        status.textContent = statusText;
-        status.classList.toggle("status-ok", availability.className === "reachable");
-        status.classList.toggle("status-uncertain", availability.className === "uncertain");
-      }
-      if (wrap === DOM.homeDomainWrap) {
-        item.classList.toggle("site-available", isSiteAvailable);
-        item.classList.toggle("site-unavailable", !isSiteAvailable);
-        const tags = item.querySelector(".site-tags");
-        if (tags) {
-          tags.innerHTML = `${availability.className === "unavailable" ? "" : `<span class="site-tag ${site.open ? "open" : "closed"}">${site.open ? "管理员开放" : "管理员关闭"}</span>`}<span class="site-tag site-reachability ${availability.className}">${availability.label}</span>`;
-        }
-        const visitButton = item.querySelector(".site-visit-btn");
-        if (visitButton) {
-          visitButton.disabled = !isSiteAvailable;
-          visitButton.textContent = isSiteAvailable ? "访问" : "不可访问";
-        }
-      }
+  const availability = siteAvailability(site.id, site.url);
+  for (const item of DOM.adminDomainWrap.querySelectorAll(".site-item[data-site-id]")) {
+    if (item.dataset.siteId !== site.id) continue;
+    const status = item.querySelector(".site-status");
+    if (status) {
+      status.textContent = statusText;
+      status.classList.toggle("status-ok", availability.className === "reachable");
+      status.classList.toggle("status-uncertain", availability.className === "uncertain");
     }
-  });
+  }
 }
 let automaticStatusRefreshRunning = false;
 async function refreshSiteStatusesSilently() {
@@ -1481,11 +1464,8 @@ function renderHomeDomainList() {
   const frag = document.createDocumentFragment();
   sortedList.forEach((item, idx) => {
     const div = document.createElement("div");
-    const status = getLinkStatuses()[item.id];
     const isFavorite = favorites.includes(item.id);
-    const availability = siteAvailability(item.id, item.url);
-    const isSiteAvailable = item.open && availability.className === "reachable";
-    div.className = `site-item ${item.open ? "" : "close-state"} ${isSiteAvailable ? "site-available" : "site-unavailable"}`;
+    div.className = `site-item ${item.open ? "" : "close-state"}`;
     div.dataset.siteId = item.id;
     if (currentSite?.id === item.id) div.classList.add("selected");
     div.style.animationDelay = `${idx * 0.04}s`;
@@ -1493,19 +1473,14 @@ function renderHomeDomainList() {
           <div class="site-card-main">
             <div class="site-row">
                 <span class="site-name"><span class="site-icon">${siteIconMarkup(item.icon)}</span> ${escapeHtml(item.name)}</span>
-                <span class="site-tags">
-                  ${availability.className === "unavailable" ? "" : `<span class="site-tag ${item.open ? "open" : "closed"}">${item.open ? "管理员开放" : "管理员关闭"}</span>`}
-                  <span class="site-tag site-reachability ${availability.className}">${availability.label}</span>
-                </span>
             </div>
             ${(item.description || item.category) ? `<div class="site-description-row">
               ${item.description ? `<div class="site-description">${escapeHtml(item.description)}</div>` : ""}
               ${item.category ? `<span class="category-tag">${escapeHtml(item.category)}</span>` : ""}
             </div>` : ""}
             <div class="site-url">${escapeHtml(item.url)}</div>
-            <div class="site-status ${status?.url === item.url && status.state === "reachable" ? "status-ok" : status?.url === item.url ? "status-uncertain" : ""}">${escapeHtml(linkStatusText(item.id, item.url))}</div>
             <div class="site-card-actions">
-              <button class="btn btn-primary btn-sm site-visit-btn" type="button" ${isSiteAvailable ? "" : "disabled"}>${isSiteAvailable ? "访问" : "不可访问"}</button>
+              <button class="btn btn-primary btn-sm site-visit-btn" type="button" ${item.open ? "" : "disabled"}>访问</button>
               <button class="btn btn-secondary btn-sm site-copy-btn" type="button">复制链接</button>
               <button class="favorite-btn ${isFavorite ? "is-favorite" : ""}" type="button" aria-label="${isFavorite ? "取消收藏" : "添加收藏"}" aria-pressed="${isFavorite}">${isFavorite ? "★" : "☆"}</button>
             </div>
