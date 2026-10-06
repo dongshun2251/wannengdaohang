@@ -1,19 +1,19 @@
 {
   "openNewTab": true,
   "theme": "mint",
-  "lastSelectSiteId": "site_1791123911284_u2cjcqrg",
+  "lastSelectSiteId": "site_1791326121716_vp60tsr2",
   "repoUrl": "https://github.com/dongshun2251/wannengdaohang/edit/main/config.json",
   "adminPwdHash": "w08aExyDfWJg+SJrsp+pDLHUqYdbm4cPpytl0FH0IAM=",
   "adminPwdSalt": "nwAXp3LS2E+cpkqAHRV84w==",
   "adminPwdIterations": 310000,
   "domainConfig": [
     {
-      "id": "site_1791123911284_u2cjcqrg",
-      "name": "车载娱乐系统",
-      "url": "https://202a1023.r16.vip.cpolar.cn",
-      "icon": "https://www.google.com/s2/favicons/?domain_url=https%3A%2F%2F202a1023.r16.vip.cpolar.cn&sz=64",
-      "category": "娱乐",
-      "description": "车载娱乐系统",
+      "id": "site_1791326121716_vp60tsr2",
+      "name": "前端学习薄",
+      "url": "https://3c889e0e.r16.vip.cpolar.cn",
+      "icon": "https://www.google.com/s2/favicons/?domain_url=https%3A%2F%2F3c889e0e.r16.vip.cpolar.cn&sz=64",
+      "category": "学习",
+      "description": "学习与记录:HTML-CSS-JS-PHP-MYSQL",
       "weight": 1,
       "open": true
     }
